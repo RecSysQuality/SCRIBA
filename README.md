@@ -2,22 +2,34 @@ This repository contains the code for **SCRIBA: A Budget-Aware Active Learning F
 
 ## Before Getting Started
 
-1. Download the six datasets from the Amazon Reviews 2023 collection:  
+1. Clone the progject.
+
+2. Download the six datasets from the Amazon Reviews 2023 collection:  
    :contentReference[oaicite:0]{index=0}
 
-2. Extract the interaction `.jsonl` files into the following directory:
+3. Extract the interaction `.jsonl` files into the following directory:
 
 ```text
 src/data/original/
 ```
 
-3. SCRIBA is deployed as a docker container.
-From the root directory of the project, run:
+3. From the root directory of the project, run:
 
 ```bash
-docker build -t scriba .
+pip install -r requirements.txt
 ```
 
 ## Passive learning
+1. To run the passive learning phases of the pipeline, from preprocessing to training of impact predictor, run:
+   
+```bash
+python run src/passive_learning/main.py
+```
+
 
 ## Active learning 
+1. To run the active learning phases of the pipeline, run:
+   
+```bash
+python run src/active_learning/main.py
+```
