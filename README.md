@@ -1,3 +1,5 @@
+# SCRIBA
+
 This repository contains the code for **SCRIBA: A Budget-Aware Active Learning Framework for Defect Removal in Recommender Systems**, accepted as a full paper at the 2026 ACM CIKM conference.
 
 ## Before Getting Started
