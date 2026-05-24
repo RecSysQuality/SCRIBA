@@ -16,6 +16,7 @@ From the root directory of the project, run:
 
 ```bash
 docker build -t scriba .
+```
 
 ## Passive learning
 
