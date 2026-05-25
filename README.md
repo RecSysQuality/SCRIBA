@@ -35,8 +35,7 @@ The feedback signals collected after each removal — the actual impact observed
 
 1. Clone the progject.
 
-2. Download the six datasets from the Amazon Reviews 2023 collection:  
-   :contentReference[oaicite:0]{index=0}
+2. Download the six datasets from the Amazon Reviews 2023 collection: [Amazon Reviews 2023 collection](https://amazon-reviews-2023.github.io/)
 
 3. Extract the interaction `.jsonl` files into the following directory:
 
