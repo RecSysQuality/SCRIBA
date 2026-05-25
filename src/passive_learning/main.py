@@ -117,6 +117,34 @@ def print_stats(datasets):
         graph_stats(df, dataset=dataset, k=5)
 
 
+
+def train_predictor():
+    initial_datasets = [
+        {
+            "name": "Office_Products",
+            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Office_Products_sage_new_version_2.pt",
+            "json_path": f"{BASE_DIR}/files/Office_Products_labels.jsonl",
+        },
+        {
+            "name": "Toys_and_Games",
+            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Toys_and_Games_sage_new_version_2.pt",
+            "json_path": f"{BASE_DIR}/files/Toys_and_Games_labels.jsonl",
+        },
+
+        {
+            "name": "Pet_Supplies",
+            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Pet_Supplies_sage_new_version_2.pt",
+            "json_path": f"{BASE_DIR}/files/Pet_Supplies_labels.jsonl",
+        },
+
+
+    ]
+
+
+
+    train_regressor(initial_datasets[0:4], initial_datasets[4], path_csv)
+
+
 if __name__ == '__main__':
 
     # PASSIVE LEARNING
@@ -142,7 +170,7 @@ if __name__ == '__main__':
 
 
     print(f"TRAIN PREDICTOR")
-
+    train_predictor()
 
 
 

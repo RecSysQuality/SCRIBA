@@ -78,12 +78,24 @@ def load_embeddings(pt_path: str, drop_features=None):
     return X, defect_ids, col_names, group
 
 
-def load_labels(json_path: str) -> dict[str, float]:
-    with open(json_path) as f:
-        data = json.load(f)
-        # return data
-    return {str(e["defect_id"]): float(e["delta_entropia 0"]) for e in data}
+# def load_labels(json_path: str) -> dict[str, float]:
+#     with open(json_path) as f:
+#         data = json.load(f)
+#         # return data
+#     return {str(e["defect_id"]): float(e["delta_entropia 0"]) for e in data}
+import json
 
+def load_labels(json_path: str) -> dict[str, float]:
+
+    data = {}
+
+    with open(json_path, "r") as f:
+        for line in f:
+            if line.strip():  # evita righe vuote
+                e = json.loads(line)
+                data[str(e["defect_id"])] = float(e['local']['all']['entropy']["delta"])
+
+    return data
 
 def align_pairs(features, defect_ids, labels, min_abs=0.1, max_abs=0.1, drop_ids=None, to_keep_ids=None):
     rows, ys, ids = [], [], []
@@ -2021,32 +2033,6 @@ def train_regressor(datasets, dataset_active, path_csv):
 
 
 
-
-if __name__ == "__main__":
-    initial_datasets = [
-        {
-            "name": "Office_Products",
-            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Office_Products_sage_new_version_2.pt",
-            "json_path": f"{BASE_DIR}/labels/labels_Office_Products.json",
-        },
-        {
-            "name": "Toys_and_Games",
-            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Toys_and_Games_sage_new_version_2.pt",
-            "json_path": f"{BASE_DIR}/labels/labels_Toys_and_Games.json",
-        },
-
-        {
-            "name": "Pet_Supplies",
-            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Pet_Supplies_sage_new_version_2.pt",
-            "json_path": f"{BASE_DIR}/labels/labels_Pet_Supplies.json",
-        },
-
-
-    ]
-
-
-
-    train_regressor(initial_datasets[0:4], initial_datasets[4], path_csv)
 
 
 

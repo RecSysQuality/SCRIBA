@@ -711,6 +711,7 @@ def loo_impact(
     #     print(f"  Nessuna coppia trovata skip.")
     #     return 0.0, 0
     results_obj = {}
+    results_obj['defect_id'] = defects_list[0]
     if method == 'warm':
         if base_model is None:
             base_model = LightGCN(config, train_data.dataset).to(config["device"])
@@ -880,8 +881,12 @@ def loo_impact(
 
 
 
-            #results_obj['local'][tipo]['relevance'] = {'loo':res20local}
+            results_obj['local'][tipo]['relevance'] = {'base':res20local_base,'loo':res20local_loo}
             print('end training', time.time()-st)
+
+            with open(f"{BASE_DIR}/files/{dataset_name}_labels.jsonl","a") as g:
+                json.dump(results_obj, g)
+                g.write("\n")
 
         print("\n\n\n")
 
@@ -898,7 +903,7 @@ def compute_all_loo_impacts(
     df_train: pd.DataFrame,
     all_users_int, topk_np,
     method: Literal["influence", "local", "warm"] = "warm",  # [OTT. E]
-    n = 0,target_users=[],target_id=[]
+    n = 0,target_users=[],target_id=[],results=dict,
 ) -> tuple[dict, dict, dict]:
     """
     Calcola LOO impact per tutti i difetti.
@@ -943,7 +948,7 @@ def compute_all_loo_impacts(
         valid_data=valid_data,
         df_train=df_train,
         all_users_int=all_users_int,
-        topk_np=topk_np,target_users=target_users,target_id = target_id,
+        topk_np=topk_np,target_users=target_users,target_id = target_id,results=results,
         base_model=base_model,
         method=method,     n=n                 # [OTT. E]
     )
@@ -1165,12 +1170,16 @@ if __name__ == "__main__":
             random.shuffle(defects)
 
 
-        a = True
-        if a:
+        save = True
+
+        if save:
+            results = {}
             for defects_list in defects:
+
                 print("----" * 50)
                 print(f"{defects_list} defectslist")
                 if type(defects_list) != list:
+                    results[defects_list] = {}
                     defects_list = [defects_list]
                 n = len(defects_list)
 
@@ -1203,7 +1212,7 @@ if __name__ == "__main__":
                     train_data=train_data,
                     valid_data=valid_data,
                     df_train=df_train,all_users_int=all_users_int,topk_np=topk_np,
-                    method="warm",n=n,target_users=target_users,target_id=target_id
+                    method="warm",n=n,target_users=target_users,target_id=target_id,results=results,
                     # cambia in "local" per risultati più precisi
                 )
                 print("----" * 50)
