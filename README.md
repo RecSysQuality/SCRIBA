@@ -3,7 +3,7 @@
 This repository contains the code for **SCRIBA: A Budget-Aware Active Learning Framework for Defect Removal in Recommender Systems**, accepted as a full paper at the 2026 ACM CIKM conference.
 
 ## How SCRIBA works
-![Screenshot](./pipeline.png)
+![Screenshot](./pipeline1.png)
 
 The pipeline comprises two main phases: *passive learning* and *active learning* phases.
 
