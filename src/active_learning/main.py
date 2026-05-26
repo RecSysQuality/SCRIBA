@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(".."))
-
+from LOO_active import *
 from defect_injector.configs import *
 from defect_injector.injector_implicit import *
 from preprocess.splitter import *
@@ -68,10 +68,10 @@ if __name__ == '__main__':
         if os.path.exists(f"{BASE_DIR}/defects_round_{roudn}_selected.json"):
             selected_defects = json.load(open(f"{BASE_DIR}/defects_round_{roudn}_selected.json","r"))
             # 5. Reward
-            compute_reward()
-
+            LOO_eval(selected_defects,dataset_name)
+            compute_reward(selected_defects)
             # 6. active learning
-            active_learning()
+            active_learning(dataset_name)
             # 7. update graph
             update_graph()
 

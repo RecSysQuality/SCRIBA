@@ -1066,23 +1066,12 @@ def LOO(defect_to_keep,prev_list,dataset_name,keep_all=True,single_eval=False,it
 # Main
 # =============================================================================
 
-def LOO_eval():
+def LOO_eval(dataset,defects):
     import sys
     import os
 
 
-
-
-    group_by = True
-    baseline = True
-    k_scan = 20
-    if group_by or baseline:
-        k_scan = 100
-    defects_regressor = []
-
-    defect_to_keep = []
-
-    for dataset_name in ["Toys_and_Games","Pet_Supplies","Office_Products"]:
+    for dataset_name in [dataset]:
 
         print(f"dataset={dataset}")
 
@@ -1100,7 +1089,6 @@ def LOO_eval():
         df_val   = load_dataset(vali_path, out_v_dir)
         df_test  = load_dataset(test_path, out_t_dir)
 
-        df_defects = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset_name}_5/injected_noise_new.csv")
 
         (model, config, dataset, train_data, valid_data, test_data,
          base_weights, checkpoint_path) = train_base_model(
@@ -1123,42 +1111,11 @@ def LOO_eval():
 
         defects = [
             {"id": gid, "group_id": gid}
-            for gid in df_defects["group_id"].unique()
+            for gid in defects
         ]
-        defects_regressor_obj = [
-            {"id": gid, "group_id": gid}
-            for gid in defects_regressor
-        ]
-
-        if (len(defects_regressor) > 0):
-            defects_list = [
-                {"id": gid, "group_id": gid}
-                for gid in defects_regressor
-            ]
-
-
-            from itertools import accumulate
-
-            defects_list = []
-            current = []
-            defects = []
-            for dl in lista_difetti:
-                current = [ {                  
-                        "id": el,
-                        "group_id": el
-                    }
-                    for el in dl]
-
-
-                defects.append(current.copy())
-
-
-
 
 
         print(f"totale difetti evaluated: {len(defects)}")
-
-
         print("compute loo impacts", flush=True)
 
         n = 0
