@@ -37,15 +37,22 @@ if __name__ == '__main__':
         print(f"INJECTING NOISE {dataset}")
         inject_noise(datasets, k=5, overlap=0.25)
 
-    # 3. extract defects
-    detect_defects()
 
-    # 2. create embeddings
-    run_graphsage(infer=True)
-    create_defects_embeddings_inference()
-    
+
     # start active learning
-    for round in range(1,N):
-        print()
+    for round in range(0,N):
+        # 3. extract defects
+        detect_defects()
 
+        # 2. create embeddings
+        run_graphsage(infer=True)
+        create_defects_embeddings_inference()
+
+        # 3. predict
+
+        # 4. MAB
+
+        # 5. Reward
+
+        # 6. update graph
 
