@@ -13,8 +13,8 @@ from embeddings_generator.graphsage import run_graphsage
 from embeddings_generator.embeddings_generator_4entropy import create_defects_embeddings
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(BASE_DIR)
 
 def print_stats_noise():
     input_dir = f"{BASE_DIR}/data"
@@ -100,8 +100,8 @@ def inject_noise(datasets,k,overlap):
 
         print(f"Elaborating dataset: {dataset}")
         run_injection(
-            input_csv=f"{BASE_DIR}/data/original/split/{dataset}/train_{dataset}_5.csv",  # il tuo CSV
-            output_dir=f"{BASE_DIR}/data/noisy/{dataset}_{k}/",
+            input_csv=f"{PARENT_DIR}/data/original/split/{dataset}/train_{dataset}_5.csv",  # il tuo CSV
+            output_dir=f"{PARENT_DIR}/data/noisy/{dataset}_{k}/",
             config=cfg,overlap=overlap
         )
 
@@ -110,10 +110,10 @@ def inject_noise(datasets,k,overlap):
 def print_stats(datasets):
     # # stats
     for dataset in datasets:
-        df = pd.read_csv(f"{BASE_DIR}/data/original/{dataset}_1.csv")
+        df = pd.read_csv(f"{PARENT_DIR}/data/original/{dataset}_1.csv")
         graph_stats(df, dataset=dataset, k=1)
         print(f'dataset {dataset}', flush=True)
-        df = pd.read_csv(f"{BASE_DIR}/data/original/{dataset}_5.csv")
+        df = pd.read_csv(f"{PARENT_DIR}/data/original/{dataset}_5.csv")
         graph_stats(df, dataset=dataset, k=5)
 
 
@@ -146,6 +146,11 @@ def train_predictor():
 
 
 if __name__ == '__main__':
+
+    # create necessary folders
+    os.makedirs(f"{PARENT_DIR}/checkpoints/",exist_ok=True)
+    os.makedirs(f"{PARENT_DIR}/recbole/", exist_ok=True)
+    os.makedirs(f"{PARENT_DIR}/recbole/dataset", exist_ok=True)
 
     # PASSIVE LEARNING
     # graph loading

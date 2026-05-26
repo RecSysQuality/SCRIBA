@@ -561,17 +561,18 @@ def train_base_model(config_path: str, dataset_name: str,local=False,relevance=F
 
     model   = LightGCN(config, train_data.dataset).to(config["device"])
     trainer = Trainer(config, model)
-    if not os.path.exists(f"{BASE_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth"):
+    if not os.path.exists(f"{PARENT_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth"):
         print('NOT found model')
         trainer.fit(train_data, valid_data=None, saved=True, show_progress=True)
         base_weights = copy.deepcopy(model.state_dict())
-        os.makedirs(f"{BASE_DIR}/checkpoints/{dataset_name}/LightGCN/", exist_ok=True)
-        torch.save(base_weights, f"{BASE_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth")
+        os.makedirs(f"{PARENT_DIR}/checkpoints/{dataset_name}/", exist_ok=True)
+        os.makedirs(f"{PARENT_DIR}/checkpoints/{dataset_name}/LightGCN/", exist_ok=True)
+        torch.save(base_weights, f"{PARENT_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth")
     else:
         print('found model')
 
         print('found model')
-        checkpoint_path = f"{BASE_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth"
+        checkpoint_path = f"{PARENT_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth"
         checkpoint = torch.load(checkpoint_path, map_location=config["device"])
         try:
             base_weights = checkpoint['state_dict']
@@ -583,7 +584,7 @@ def train_base_model(config_path: str, dataset_name: str,local=False,relevance=F
 
 
 
-        #checkpoint_path = f"{BASE_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth"
+        #checkpoint_path = f"{PARENT_DIR}/checkpoints/{dataset_name}/LightGCN/base_weights_new.pth"
         # torch.save({
         #     'state_dict': model.state_dict()
         # }, checkpoint_path)
