@@ -312,14 +312,14 @@ def ego_splitting_group(df, users, items, min_cluster_size=3):
 
 if __name__ == '__main__':
     obj = {}
-    datasets = "Office_Products_5"
+    datasets = ["Office_Products_5","Beauty_and_Personal_Care","Books"]
     try:
         datasets = os.environ.get("DATASET")
         print(datasets)
     except Exception as e:
         datasets = "Sports_and_Outdoors"
     start = True
-    for dataset in [datasets]:
+    for dataset in datasets:
         if start:
             df = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv", usecols=["user_id", "item_id"])
             fraud = FraudarTopK(c=30.0).fit_graph(df)
@@ -357,7 +357,7 @@ if __name__ == '__main__':
                     dfg = df[(df['user_id'].isin(group['users'])) & df['item_id'].isin(group['items'])]
                     dfg.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/mini_group_hard_{i}_{j}.csv", index=False)
 
-        else:
+        
             files = [file for file in os.listdir(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/") if
                      file.startswith("dense_extr_") or file.startswith('cam_extr_')]
             dfs = []
