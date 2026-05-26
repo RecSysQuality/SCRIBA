@@ -13,7 +13,7 @@ from utils import *
 from graph_stats import *
 import time
 from embeddings_generator.graphsage import run_graphsage
-from embeddings_generator.embeddings_generator_4entropy import create_defects_embeddings
+from embeddings_generator.embeddings_generator_4entropy import create_defects_embeddings, create_defects_embeddings_inference
 
 
 if __name__ == '__main__':
@@ -41,8 +41,9 @@ if __name__ == '__main__':
     detect_defects()
 
     # 2. create embeddings
-
-
+    run_graphsage(infer=True)
+    create_defects_embeddings_inference()
+    
     # start active learning
     for round in range(1,N):
         print()

@@ -621,11 +621,37 @@ def aggregate_embeddings0(emb: dict, defects_df: pd.DataFrame) -> pd.DataFrame:
 
 import os
 import json
+def create_defects_embeddings_inference():
+    passive = ["Toys_and_Games", "Office_Products", "Pet_Supplies"]
+    online = ["Sports_and_Outdoors", "Books", "Beauty_and_Personal_Care"]
+
+    for method in ['sage']:
+        for dataset in online:
+            print(f"{dataset}-->{method}")
+
+            defects_df = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/merged_filtered.csv")
+            try:
+                emb = load_embeddings(f"{PARENT_DIR}/node_embeddings/node_emb_{dataset}_final.pt")
+            except Exception as e:
+                emb = load_embeddings(
+                    f"{PARENT_DIR}/node_embeddings/node_emb_inference_{dataset}_final.pt")
+
+            df_emb = aggregate_embeddings(emb, defects_df)
+
+            print('compute_hand')
+
+            os.makedirs(f"{PARENT_DIR}/node_embeddings/", exist_ok=True)
+            torch.save({
+                "features": torch.tensor(df_emb.values, dtype=torch.float32),  # (n_difetti, 209)
+                "defect_ids": df_emb.index.tolist(),
+                "col_names": df_emb.columns.tolist(),
+            },
+                f"{PARENT_DIR}/node_embeddings/defects_embeddings_{dataset}_{method}_new_version_inference_2.pt")
+
+
+
 def create_defects_embeddings():
     passive = ["Toys_and_Games", "Office_Products", "Pet_Supplies"]
-    #    online = ["Books","Sports_and_Outdoors","Beauty_and_Personal_Care"]
-
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     for method in ['sage']:
         for dataset in passive:

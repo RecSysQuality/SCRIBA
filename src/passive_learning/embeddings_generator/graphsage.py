@@ -576,7 +576,7 @@ def export_embeddings(model, graphs, dataset_names, out_dir):
 # MAIN
 # ============================================================
 
-def run_graphsage():
+def run_graphsage(infere=False):
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     PARENT_DIR = os.path.dirname(BASE_DIR)
 
@@ -585,40 +585,41 @@ def run_graphsage():
     #,"Toys_and_Games","Office_Products"
     passive = ["Toys_and_Games","Office_Products","Pet_Supplies"]
     online = ["Books","Sports_and_Outdoors","Beauty_and_Personal_Care"]
-    for dataset in passive:
-        print(f"dataset: {dataset}")
-        df_train = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv")[['user_id','item_id','rating']]
-        df_vali  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/vali_{dataset}_5.csv")[['user_id','item_id','rating']]
-        df_test  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/test_{dataset}_5.csv")[['user_id','item_id','rating']]
-        df = pd.concat([df_train, df_vali, df_test])
-        all_graphs.append(df)
-        dataset_names.append(dataset)
+    if not infer:
+        for dataset in passive:
+            print(f"dataset: {dataset}")
+            df_train = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv")[['user_id','item_id','rating']]
+            df_vali  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/vali_{dataset}_5.csv")[['user_id','item_id','rating']]
+            df_test  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/test_{dataset}_5.csv")[['user_id','item_id','rating']]
+            df = pd.concat([df_train, df_vali, df_test])
+            all_graphs.append(df)
+            dataset_names.append(dataset)
 
-    model = run_training_sage_v2(
-        dataset_names, all_graphs,
-        epochs=100,
-        batch_size=2048,
-        num_neighbors=(15, 10),  # default (15,10) → subgraph enorme, riducilo
-        num_workers=0,  # dati in RAM
-        use_amp=True,  # fondamentale con 2M nodi
-    )
-    print("Inference")
-
-    for dataset in online:
-        print(f"dataset: {dataset}")
-        df_train = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv")[['user_id','item_id','rating']]
-        df_vali  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/vali_{dataset}_5.csv")[['user_id','item_id','rating']]
-        df_test  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/test_{dataset}_5.csv")[['user_id','item_id','rating']]
-        df = pd.concat([df_train, df_vali, df_test])
-        all_graphs.append(df)
-        dataset_names.append(dataset)
-        emb = inference(
-            dataset,
-            GraphSAGE,
-            f"{BASE_DIR}/weights/all_SAGE_finale.pt",
-            df,
-            use_importance=False,
+        model = run_training_sage_v2(
+            dataset_names, all_graphs,
+            epochs=100,
+            batch_size=2048,
+            num_neighbors=(15, 10),  # default (15,10) → subgraph enorme, riducilo
+            num_workers=0,  # dati in RAM
+            use_amp=True,  # fondamentale con 2M nodi
         )
+    print("Inference")
+    if infere:
+        for dataset in online:
+            print(f"dataset: {dataset}")
+            df_train = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv")[['user_id','item_id','rating']]
+            df_vali  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/vali_{dataset}_5.csv")[['user_id','item_id','rating']]
+            df_test  = pd.read_csv(f"{PARENT_DIR}/data/original/split/{dataset}/test_{dataset}_5.csv")[['user_id','item_id','rating']]
+            df = pd.concat([df_train, df_vali, df_test])
+            all_graphs.append(df)
+            dataset_names.append(dataset)
+            emb = inference(
+                dataset,
+                GraphSAGE,
+                f"{BASE_DIR}/weights/all_SAGE_finale.pt",
+                df,
+                use_importance=False,
+            )
 
 
 
