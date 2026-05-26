@@ -1,16 +1,20 @@
 import os
 
 import pandas as pd
+import sys
+import os
 
-from defect_injector.configs import cfg_pet_supplies, cfg_baby_products, cfg_books, cfg_toys_games, \
-    cfg_sports_outdoors
+sys.path.append(os.path.abspath(".."))
+
+from defect_injector.configs import *
 from defect_injector.injector_implicit import *
-from preprocess.splitter import temporal_leave_one_out_split
+from preprocess.splitter import *
 from utils import *
 from graph_stats import *
 import time
 from embeddings_generator.graphsage import run_graphsage
 from embeddings_generator.embeddings_generator_4entropy import create_defects_embeddings
+
 
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -36,21 +40,7 @@ def print_stats_noise():
         print(f"items coverage: {injected_nodes['item_id'].nunique() / noisy['item_id'].nunique()}")
         print(f"edges new: {len(injected_nodes) / len_all}")
 
-def preprocessing(input_dir, datasets, k=5):
-    """Phase 1: preprocessing: preprocess jsonl file, extract kcore and compute stats"""
 
-    print('entro qua')
-    for dataset in datasets:
-        st = time.time()
-        print(dataset)
-        df = load_jsonl(os.path.join(input_dir, f'{dataset}.jsonl'), k=k)
-        end = time.time()
-
-        print(f"{dataset} elaborated in {end - st}")
-        if k > 1:
-            split_data(input_dir=input_dir.split('original')[0], datasets=[dataset])
-            print(f"{dataset} splitted")
-            graph_stats(df, dataset=dataset, k=k)
 
 
 

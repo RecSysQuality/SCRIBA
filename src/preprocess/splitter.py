@@ -1,5 +1,23 @@
 import pandas as pd
 
+
+def preprocessing(input_dir, datasets, k=5):
+    """Phase 1: preprocessing: preprocess jsonl file, extract kcore and compute stats"""
+
+    print('entro qua')
+    for dataset in datasets:
+        st = time.time()
+        print(dataset)
+        df = load_jsonl(os.path.join(input_dir, f'{dataset}.jsonl'), k=k)
+        end = time.time()
+
+        print(f"{dataset} elaborated in {end - st}")
+        if k > 1:
+            split_data(input_dir=input_dir.split('original')[0], datasets=[dataset])
+            print(f"{dataset} splitted")
+            graph_stats(df, dataset=dataset, k=k)
+
+
 def temporal_leave_one_out_split(df):
     # Assicurati che il timestamp sia datetime
     df['timestamp'] = pd.to_datetime(df['timestamp'])

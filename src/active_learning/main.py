@@ -13,7 +13,7 @@ if __name__ == '__main__':
     datasets = ['Beauty_and_Personal_Care' ,'Sports_and_Outdoors', 'Books']
 
     # path of input graphs
-    input_dir = f"{BASE_DIR}/data/original"
+    input_dir = f"{PARENT_DIR}/data/original"
     for dataset in datasets:
         print(f"PREPROCESSING {dataset}")
         preprocessing(input_dir, datasets, k=5)
