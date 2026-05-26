@@ -67,17 +67,11 @@ if __name__ == '__main__':
         # selected defects
         if os.path.exists(f"{BASE_DIR}/defects_round_{roudn}_selected.json"):
             selected_defects = json.load(open(f"{BASE_DIR}/defects_round_{roudn}_selected.json","r"))
-
             # 5. Reward
             compute_reward()
 
-
-
             # 6. active learning
             active_learning()
-
-
-
             # 7. update graph
             update_graph()
 

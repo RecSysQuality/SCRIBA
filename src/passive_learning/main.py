@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(".."))
-
+from LOO import *
 from defect_injector.configs import *
 from defect_injector.injector_implicit import *
 from preprocess.splitter import *
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     create_defects_embeddings()
 
     print(f"LOO DEFECTS EVALUATION")
-
+    LOO_eval()
 
 
     print(f"TRAIN PREDICTOR")

@@ -1066,7 +1066,7 @@ def LOO(defect_to_keep,prev_list,dataset_name,keep_all=True,single_eval=False,it
 # Main
 # =============================================================================
 
-if __name__ == "__main__":
+def LOO_eval():
     import sys
     import os
     try:
