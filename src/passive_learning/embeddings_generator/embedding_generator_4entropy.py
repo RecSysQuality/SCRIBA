@@ -633,22 +633,22 @@ def create_defects_embeddings():
 
             defects_df = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/injected_noise_new.csv")
             try:
-                emb = load_embeddings(f"{BASE_DIR}/features_generator/node_embeddings/node_emb_{dataset}_final.pt")
+                emb = load_embeddings(f"{PARENT_DIR}/node_embeddings/node_emb_{dataset}_final.pt")
             except Exception as e:
                 emb = load_embeddings(
-                    f"{BASE_DIR}/features_generator/node_embeddings/node_emb_inference_{dataset}_final.pt")
+                    f"{PARENT_DIR}/node_embeddings/node_emb_inference_{dataset}_final.pt")
 
             df_emb = aggregate_embeddings(emb, defects_df)
 
             print('compute_hand')
 
-            os.makedirs(f"{BASE_DIR}/features_generator/node_embeddings/", exist_ok=True)
+            os.makedirs(f"{PARENT_DIR}/node_embeddings/", exist_ok=True)
             torch.save({
                 "features": torch.tensor(df_emb.values, dtype=torch.float32),  # (n_difetti, 209)
                 "defect_ids": df_emb.index.tolist(),
                 "col_names": df_emb.columns.tolist(),
             },
-                f"{BASE_DIR}/features_generator/node_embeddings/defects_embeddings_{dataset}_{method}_new_version_inference_2.pt")
+                f"{PARENT_DIR}/node_embeddings/defects_embeddings_{dataset}_{method}_new_version_inference_2.pt")
 
 
 # ═══════════════════════════════════════════════════════

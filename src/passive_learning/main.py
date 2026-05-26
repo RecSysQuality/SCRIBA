@@ -122,18 +122,18 @@ def train_predictor():
     initial_datasets = [
         {
             "name": "Office_Products",
-            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Office_Products_sage_new_version_2.pt",
+            "pt_path": f"{PARENT_DIR}/node_embeddings/defects_embeddings_Office_Products_sage_new_version_2.pt",
             "json_path": f"{BASE_DIR}/files/Office_Products_labels.jsonl",
         },
         {
             "name": "Toys_and_Games",
-            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Toys_and_Games_sage_new_version_2.pt",
+            "pt_path": f"{PARENT_DIR}/node_embeddings/defects_embeddings_Toys_and_Games_sage_new_version_2.pt",
             "json_path": f"{BASE_DIR}/files/Toys_and_Games_labels.jsonl",
         },
 
         {
             "name": "Pet_Supplies",
-            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_Pet_Supplies_sage_new_version_2.pt",
+            "pt_path": f"{PARENT_DIR}/node_embeddings/defects_embeddings_Pet_Supplies_sage_new_version_2.pt",
             "json_path": f"{BASE_DIR}/files/Pet_Supplies_labels.jsonl",
         },
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     datasets = ['Office_Products' ,'Pet_Supplies', 'Toys_and_Games']
 
     # path of input graphs
-    input_dir = f"{BASE_DIR}/data/original"
+    input_dir = f"{PARENT_DIR}/data/original"
     for dataset in datasets:
         print(f"PREPROCESSING {dataset}")
         preprocessing(input_dir, datasets, k=5)
