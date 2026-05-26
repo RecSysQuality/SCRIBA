@@ -651,9 +651,4 @@ def create_defects_embeddings():
                 f"{PARENT_DIR}/node_embeddings/defects_embeddings_{dataset}_{method}_new_version_inference_2.pt")
 
 
-# ═══════════════════════════════════════════════════════
-# MAIN
-# ═══════════════════════════════════════════════════════
-import os
-import json
-if __name__ == "__main__":
+
