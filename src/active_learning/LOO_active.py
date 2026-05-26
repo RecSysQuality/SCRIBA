@@ -1089,6 +1089,8 @@ def LOO_eval(dataset,defects,defects_to_remove):
 
         print(f"dataset={dataset}")
 
+        os.makedirs(f"{PARENT_DIR}/recbole/", exist_ok=True)
+        os.makedirs(f"{PARENT_DIR}/recbole/dataset/", exist_ok=True)
         os.makedirs(f"{PARENT_DIR}/recbole/dataset/{dataset_name}", exist_ok=True)
 
         path      = f"{PARENT_DIR}/data/noisy/{dataset_name}_5/dataset_dirty_new.csv"
