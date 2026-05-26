@@ -589,7 +589,7 @@ def run_active_learning(dataset_active,save_path):
 def predict_impact(dataset):
     features, defect_ids, col_names, group = load_embeddings(dataset["pt_path"])
 
-    X, y, ids, group = align(features, defect_ids, group, labels)
+    X, ids = align_for_inference(features, defect_ids)
     y_pred = model.predict(X)
 
     mse = mean_squared_error(y_test, y_pred)
@@ -618,7 +618,7 @@ def predict_impact(dataset):
     ids = ids[mask]
     group = group[mask]
     y_pred = y_pred[mask]
-    return X,y,ids,group,y_pred
+    return X,y_pred,ids
 
 
 

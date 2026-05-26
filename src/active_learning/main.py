@@ -54,13 +54,15 @@ if __name__ == '__main__':
         create_defects_embeddings_inference()
 
         # 3. predict
-        X_filtered,y_filtered,ids_filtered,group_filtered,y_pred_filtered = predict_impact(dataset_def)
+        X_filtered,y_filtered,ids_filtered = predict_impact(dataset_def)
 
 
         # 4. MAB
+        defects_round = MAB_groups(defects=ids_filtered,dataset=dataset_name)
 
 
         # 5. Reward
+
 
 
         # 6. active learning
