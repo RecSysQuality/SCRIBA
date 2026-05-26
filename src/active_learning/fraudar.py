@@ -310,18 +310,16 @@ def ego_splitting_group(df, users, items, min_cluster_size=3):
 
     return micro_groups
 
-if __name__ == '__main__':
+
+def detect_defects():
     obj = {}
-    datasets = ["Office_Products_5","Beauty_and_Personal_Care","Books"]
-    try:
-        datasets = os.environ.get("DATASET")
-        print(datasets)
-    except Exception as e:
-        datasets = "Sports_and_Outdoors"
+    datasets = ["Office_Products_5", "Beauty_and_Personal_Care", "Books"]
+
     start = True
     for dataset in datasets:
         if start:
-            df = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv", usecols=["user_id", "item_id"])
+            df = pd.read_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/dataset_dirty_new.csv",
+                             usecols=["user_id", "item_id"])
             fraud = FraudarTopK(c=30.0).fit_graph(df)
             final_groups = []
             print('start fraudar')
@@ -331,17 +329,17 @@ if __name__ == '__main__':
                 min_nodes=5,
                 min_edges=10,
                 min_score=0.25,
-                removal="hard",   # oppure "hard"
+                removal="hard",  # oppure "hard"
                 downweight=0.02
             )
             end = time.time()
-            print(f'fraudar in {end-st}')
+            print(f'fraudar in {end - st}')
 
-
-            for i,g in enumerate(groups):
-                print('group: ',i)
-                dfg = df[(df['user_id'].isin(g['users']) ) & df['item_id'].isin(g['items'])]
-                dfg.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/dataset_dirty_new_g{i}_50_hard.csv", index=False)
+            for i, g in enumerate(groups):
+                print('group: ', i)
+                dfg = df[(df['user_id'].isin(g['users'])) & df['item_id'].isin(g['items'])]
+                dfg.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/dataset_dirty_new_g{i}_50_hard.csv",
+                           index=False)
 
                 print(g["rank"], g["score"], g["n_users"], g["n_items"], g["n_edges"])
                 st = time.time()
@@ -351,13 +349,12 @@ if __name__ == '__main__':
                     items=g["items"]
                 )
                 end = time.time()
-                print(f'micro found in {end-st}')
+                print(f'micro found in {end - st}')
                 for j, group in enumerate(micro):
-                    print('micro group: ',j)
+                    print('micro group: ', j)
                     dfg = df[(df['user_id'].isin(group['users'])) & df['item_id'].isin(group['items'])]
                     dfg.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/mini_group_hard_{i}_{j}.csv", index=False)
 
-        
             files = [file for file in os.listdir(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/") if
                      file.startswith("dense_extr_") or file.startswith('cam_extr_')]
             dfs = []
@@ -378,7 +375,6 @@ if __name__ == '__main__':
 
             # salva
             final_df.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/merged_filtered.csv", index=False)
-
 
             final_groups = []
             s = False
@@ -512,4 +508,5 @@ if __name__ == '__main__':
                         camouflage_df = df.copy()
                         camouflage_df["defect"] = camouflage_df["user_id"].map(user_to_defect)
                         camouflage_df = camouflage_df[camouflage_df["defect"].notna()]
-                        camouflage_df.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/cam_extr_{ind}.csv", index=False)
+                        camouflage_df.to_csv(f"{PARENT_DIR}/data/noisy/{dataset}_5/groups/cam_extr_{ind}.csv",
+                                             index=False)

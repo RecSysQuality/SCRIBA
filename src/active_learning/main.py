@@ -1,5 +1,5 @@
 import os
-
+from fraudar import *
 import pandas as pd
 import sys
 import os
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         inject_noise(datasets, k=5, overlap=0.25)
 
     # 3. extract defects
-
+    detect_defects()
 
     # 2. create embeddings
 
