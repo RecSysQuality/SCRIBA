@@ -482,7 +482,7 @@ def active_learning(dataset, model, scaler, X_test, y_test, save_path, labels=No
 
     features, defect_ids, col_names, group = load_embeddings(dataset["pt_path"])
 
-    X, y, ids, group = align(features, defect_ids, group, labels)
+    X, y, ids = align_for_inference(features, defect_ids)
     X = scaler(X)
     y = np.abs(y)
 
@@ -573,7 +573,7 @@ def create_groups(df, path_csv, budget=10000):
 
 
 
-def run_active_learning(dataset_active,save_path):
+def run_active_learning(dataset_active,X,y,save_path):
     data = joblib.load(save_path)
 
     model = data["model"]
@@ -582,14 +582,19 @@ def run_active_learning(dataset_active,save_path):
     active_learning(
         dataset=dataset_active,
         model=model,
-        scaler=scaler, X_test=X, y_test=y, save_path= save_path, labels=labels
+        scaler=scaler, X_test=X, y_test=y, save_path= save_path
     )
 
 
-def predict_impact(dataset):
+def predict_impact(dataset,save_path):
     features, defect_ids, col_names, group = load_embeddings(dataset["pt_path"])
 
     X, ids = align_for_inference(features, defect_ids)
+    data = joblib.load(save_path)
+
+    model = data["model"]
+    scaler = data["scaler"]
+    X = scaler(X)
     y_pred = model.predict(X)
 
     mse = mean_squared_error(y_test, y_pred)

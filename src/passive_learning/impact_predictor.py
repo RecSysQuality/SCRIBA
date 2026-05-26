@@ -2014,13 +2014,14 @@ def create_groups(df, path_csv, budget=10000):
 
 def train_regressor(datasets, dataset_active, path_csv):
     # sgdregressor
+    os.makedirs(f"{PARENT_DIR}/results/",exist_ok=True)
     model, scaler, X_train, y_train = initial_fit_sgd(
         datasets=datasets,
         loss="squared_error",
         alpha=1e-9,
         learning_rate="invscaling",
         random_state=42,
-        save_path=f"{BASE_DIR}/results/sgd_regressor.joblib",
+        save_path=f"{PARENT_DIR}/results/sgd_regressor.joblib",
     )
 
     # testo il modello allenato su sports

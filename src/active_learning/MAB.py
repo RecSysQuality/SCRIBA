@@ -259,7 +259,7 @@ def MAB_group(defects,dataset):
         for i in range(len(defect_ids)) if defect_ids[i] in defects
     ]
     result = bandit.select_defects_by_edges(defects, edge_budget=5000)
-    return result.selected_defects
+    return result.selected_defects,bandit
 
 
 

@@ -681,7 +681,7 @@ def loo_impact(
     topk_np: np.ndarray,
         target_users,target_id,
     base_model: Optional[LightGCN] = None,
-    method: Literal["influence", "local", "warm"] = "influence", n=0, # [OTT. E]
+    method: Literal["influence", "local", "warm"] = "influence", n=0,,defects_to_remove=list # [OTT. E]
 ) -> tuple[dict, dict]:
     """
     LOO impact.
@@ -699,18 +699,32 @@ def loo_impact(
         base_model = LightGCN(config, train_data.dataset).to(config["device"])
         base_model.load_state_dict(base_weights)
 
+    if len(defects_to_remove) > 0:
+        # perform the finetuning on the new graph without a set of defects of the previous rounds
+        st = time.time()
+        ft_config = copy.deepcopy(config)
+        ft_config["epochs"] = 3
+        if dataset_name == 'Books':
+            ft_config["epochs"] = 1
+
+        ft_config["train_batch_size"] = 8192 #1024
+
+        ft_config["learning_rate"] = 5e-4
+        ft_config["stopping_step"] = 5
+        # ── 2. Dataset LOO (senza il difetto) ─────────────────────────────────────
+        train, valid, _ = remove_defect_from_dataset(
+            ft_config, dataset_name, defects_to_remove
+        )
+        remapped = remap_weights(base_weights, train_data.dataset, train.dataset)
+        base_model = LightGCN(config, train.dataset).to(config["device"])
+        base_model.load_state_dict(remapped)
+        trainer = get_trainer(ft_config["MODEL_TYPE"], ft_config["model"])(ft_config, base_model)
+        trainer.fit(train, valid_data=None, saved=True, show_progress=True)
 
     # ── 2. LOO model ──────────────────────────────────────────────────────────
     loo_model = LightGCN(config, train_data.dataset).to(config["device"])
     loo_model.load_state_dict(base_weights)
-    # defect_pairs_int = set()
-    # for defect in defects:
-    #     defect_pairs_int.update(get_defect_pairs_int(
-    #         train_data.dataset, df_train, defect["group_id"]
-    #     ))
-    # if len(defect_pairs_int) == 0:
-    #     print(f"  Nessuna coppia trovata skip.")
-    #     return 0.0, 0
+
     results_obj = {}
     results_obj['defect_id'] = defects_list[0]
     if method == 'warm':
@@ -904,7 +918,7 @@ def compute_all_loo_impacts(
     df_train: pd.DataFrame,
     all_users_int, topk_np,
     method: Literal["influence", "local", "warm"] = "warm",  # [OTT. E]
-    n = 0,target_users=[],target_id=[],results=dict,
+    n = 0,target_users=[],target_id=[],results=dict,defects_to_remove=list
 ) -> tuple[dict, dict, dict]:
     """
     Calcola LOO impact per tutti i difetti.
@@ -951,7 +965,7 @@ def compute_all_loo_impacts(
         all_users_int=all_users_int,
         topk_np=topk_np,target_users=target_users,target_id = target_id,results=results,
         base_model=base_model,
-        method=method,     n=n                 # [OTT. E]
+        method=method,     n=n       ,defects_to_remove=list          # [OTT. E]
     )
     print('difetto in: ',time.time()-st)
 
@@ -1066,7 +1080,7 @@ def LOO(defect_to_keep,prev_list,dataset_name,keep_all=True,single_eval=False,it
 # Main
 # =============================================================================
 
-def LOO_eval(dataset,defects):
+def LOO_eval(dataset,defects,defects_to_remove):
     import sys
     import os
 
@@ -1166,7 +1180,7 @@ def LOO_eval(dataset,defects):
                     train_data=train_data,
                     valid_data=valid_data,
                     df_train=df_train,all_users_int=all_users_int,topk_np=topk_np,
-                    method="warm",n=n,target_users=target_users,target_id=target_id,results=results,
+                    method="warm",n=n,target_users=target_users,target_id=target_id,results=results,defects_to_remove=defects_to_remove,
                     # cambia in "local" per risultati più precisi
                 )
                 print("----" * 50)

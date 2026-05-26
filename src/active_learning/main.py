@@ -24,7 +24,7 @@ if __name__ == '__main__':
     B = 150_000
     b = B // N # budget per round
     dataset_name = 'Sports_and_Outdoors'
-
+    type_users = 'lt'
     #---------
 
     # 1. inject noise
@@ -44,6 +44,8 @@ if __name__ == '__main__':
             "name": dataset_name,
             "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_{dataset_name}_sage_new_version_2.pt",
         }
+
+    defects_to_remove = []
     # start active learning
     for round in range(0,N):
         # 3. extract defects
@@ -54,11 +56,14 @@ if __name__ == '__main__':
         create_defects_embeddings_inference()
 
         # 3. predict
-        X_filtered,y_filtered,ids_filtered = predict_impact(dataset_def)
+        if round > 0:
+            X_filtered,y_filtered,ids_filtered = predict_impact(dataset_def,f"{PARENT_DIR}/results/sgd_regressor_{dataset_name}.joblib")
+        else:
+            X_filtered,y_filtered,ids_filtered = predict_impact(dataset_def,f"{PARENT_DIR}/results/sgd_regressor.joblib")
 
 
         # 4. MAB
-        defects_round = MAB_groups(defects=ids_filtered,dataset=dataset_name)
+        defects_round,bandit = MAB_groups(defects=ids_filtered,dataset=dataset_name)
         with open(f"{BASE_DIR}/defects_round_{roudn}.json","a") as g:
             round_obj = {}
             round_obj[str(round)] = defects_round
@@ -67,13 +72,31 @@ if __name__ == '__main__':
         # selected defects
         if os.path.exists(f"{BASE_DIR}/defects_round_{roudn}_selected.json"):
             selected_defects = json.load(open(f"{BASE_DIR}/defects_round_{roudn}_selected.json","r"))
+            selected_defects = selected_defects[str(round)]
             # 5. Reward
-            LOO_eval(selected_defects,dataset_name)
-            compute_reward(selected_defects)
+            LOO_eval(selected_defects,dataset_name,defects_to_remove)
+            rewards_dict = compute_reward(selected_defects)
+            rewards = [
+                rewards_dict[type_users][d.defect_id]
+                for d in selected_defects
+            ]
+
+            if type_users == 'all':
+                bandit.batch_update(selected_defects, rewards)
+            elif type_users == 'pop':
+                bandit.batch_update(selected_defects, rewards)
+            else:
+                bandit.batch_update(selected_defects, rewards)
+
+            selected_ids = {d.defect_id for d in selected_defects}
+            mask = np.array([i in selected_ids for i in ids_filtered])
+
+            X_filtered = X_filtered[mask]
+            y_filtered = y_filtered[mask]
+            ids_filtered = ids_filtered[mask]
             # 6. active learning
-            active_learning(dataset_name)
-            # 7. update graph
-            update_graph()
+            run_active_learning(dataset_name,X_filtered,y_filtered,f"{PARENT_DIR}/results/sgd_regressor_{dataset_name}.joblib")
+
 
 
 
