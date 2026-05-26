@@ -19,9 +19,11 @@ from embeddings_generator.embeddings_generator_4entropy import create_defects_em
 if __name__ == '__main__':
 
     # params
+
     N = 30 # number of rounds
     B = 150_000
     b = B // N # budget per round
+    dataset_name = 'Sports_and_Outdoors'
 
     #---------
 
@@ -38,7 +40,10 @@ if __name__ == '__main__':
         inject_noise(datasets, k=5, overlap=0.25)
 
 
-
+    dataset_def = {
+            "name": dataset_name,
+            "pt_path": f"{BASE_DIR}/node_embeddings/defects_embeddings_{dataset_name}_sage_new_version_2.pt",
+        }
     # start active learning
     for round in range(0,N):
         # 3. extract defects
@@ -49,10 +54,20 @@ if __name__ == '__main__':
         create_defects_embeddings_inference()
 
         # 3. predict
+        X_filtered,y_filtered,ids_filtered,group_filtered,y_pred_filtered = predict_impact(dataset_def)
+
 
         # 4. MAB
 
+
         # 5. Reward
 
-        # 6. update graph
+
+        # 6. active learning
+
+
+
+        # 7. update graph
+
+
 
