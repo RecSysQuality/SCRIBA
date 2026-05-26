@@ -59,17 +59,24 @@ if __name__ == '__main__':
 
         # 4. MAB
         defects_round = MAB_groups(defects=ids_filtered,dataset=dataset_name)
+        with open(f"{BASE_DIR}/defects_round_{roudn}.json","a") as g:
+            round_obj = {}
+            round_obj[str(round)] = defects_round
+            # salva i difetti
+
+        # selected defects
+        if os.path.exists(f"{BASE_DIR}/defects_round_{roudn}_selected.json"):
+
+            print()
+            # 5. Reward
 
 
-        # 5. Reward
+
+            # 6. active learning
 
 
 
-        # 6. active learning
-
-
-
-        # 7. update graph
+            # 7. update graph
 
 
 
