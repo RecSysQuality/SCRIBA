@@ -681,7 +681,7 @@ def loo_impact(
     topk_np: np.ndarray,
         target_users,target_id,
     base_model: Optional[LightGCN] = None,
-    method: Literal["influence", "local", "warm"] = "influence", n=0,,defects_to_remove=list # [OTT. E]
+    method: Literal["influence", "local", "warm"] = "influence", n=0,defects_to_remove=list # [OTT. E]
 ) -> tuple[dict, dict]:
     """
     LOO impact.
