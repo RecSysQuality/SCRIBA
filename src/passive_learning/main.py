@@ -132,7 +132,7 @@ def train_predictor():
 
 
 
-    train_regressor(initial_datasets[0:4], initial_datasets[4], path_csv)
+    train_regressor(initial_datasets[0:3], initial_datasets[2], path_csv)
 
 
 if __name__ == '__main__':
