@@ -56,8 +56,12 @@ pip install -r requirements.txt
 python run src/passive_learning/main.py
 ```
 
+The method will first train LightGCN on all the datasets. It will take some time depending on the infrastructure on which you deploy SCRIBA, especially for the larger datasets such as Books, Pet Supplies and Beauty and Personal Care.
 
 ## Active learning 
+
+Make sure to have all the models saved from passive learning phase.
+
 1. To run the active learning phases of the pipeline, run:
    
 ```bash
