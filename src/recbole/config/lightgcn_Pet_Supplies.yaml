@@ -20,7 +20,7 @@ train_batch_size: 4096 # 2048
 learner: adam
 learning_rate: 0.0005
 neg_sampling:
-  uniform: 3
+  uniform: 1
 
 
 # evaluation

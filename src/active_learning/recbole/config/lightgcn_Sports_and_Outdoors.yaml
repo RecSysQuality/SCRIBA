@@ -13,7 +13,7 @@ eval_args:
   mode: full
 
 # training
-epochs: 70 # 30 era buono
+epochs: 50 # 30 era buono
 seed: 42
 reproducibility: True
 train_batch_size: 4096 # 2048
@@ -31,7 +31,7 @@ eval_step: 100
 stopping_step: 10
 # model
 embedding_size: 64 # 64
-n_layers: 3
+n_layers: 2
 
 min_user_inter_num: 0
 min_item_inter_num: 0

@@ -985,7 +985,7 @@ def LOO(defect_to_keep,prev_list,dataset_name,keep_all=True,single_eval=False,it
 
     (model, config, dataset, train_data, valid_data, test_data,
      base_weights, checkpoint_path) = train_base_model(
-        f"{BASE_DIR}/config/lightgcn_{dataset_name}.yaml", dataset_name, local=False,
+        f"{PARENT_DIR}/recbole/config/lightgcn_{dataset_name}.yaml", dataset_name, local=False,
         relevance=len(defects_regressor) > 0
     )
 
