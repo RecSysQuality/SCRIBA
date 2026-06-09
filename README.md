@@ -18,10 +18,11 @@ To quantify how much each defect harms recommendation quality, a leave-one-out s
 **Predictor training**
 The defect representations and their corresponding entropy variations are used to train a linear regressor, which learns to estimate the impact of a defect without actually removing it. This predictor can then be applied to previously unseen graphs.
 
+
+## Active Learning
 **Detection and representation**
 On a new deployment graph, an anomaly detection algorithm (FRAUDAR) identifies candidate defects. Each one is projected into the same latent space as the encoder trained in the passive phase, producing a compact and comparable representation.
 
-## Active Learning
 **Impact prediction and bandit-based selection**
 The predictor estimates the expected impact of each candidate defect. Those with a predicted impact below a threshold are discarded. Among the remaining ones, a LinUCB contextual bandit selects which defects to remove within the available budget, balancing exploitation — favouring defects with high estimated impact — and exploration — considering defects in under-observed regions of the latent space.
 
