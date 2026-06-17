@@ -245,7 +245,7 @@ def MAB_group(defects,dataset):
 
     EMBEDDING_DIM = 64
     ALPHA = 1.0       # esplorazione
-    LAMBDA = 1.0      # regularizzazione
+    LAMBDA = 0.0001      # regularizzazione
 
 
     path = f"{BASE_DIR}/node_embeddings/defects_embeddings_{dataset}_sage_new_version_2.pt"
