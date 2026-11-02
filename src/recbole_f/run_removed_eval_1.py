@@ -1,86 +1,4 @@
-#!/usr/bin/env python3
-"""
-run_removed_eval.py
-===================
-Effetto della rimozione di un insieme di difetti (file di make_removed_defects.py)
-su LightGCN, con lo stesso setup di run_my_eval.py (stessi file, stessi
-iperparametri, stesso split train/valid/test, stessa valutazione full-sort).
 
-Per ogni dataset e per ogni file <ds>.removed_*.tsv trovato in --removed-dir:
-
-  1. BASE   modello di partenza (checkpoint di run_my_eval.py; se manca lo allena).
-            Top-K di tutti gli utenti di test.
-  2. UTENTI AFFETTI  come in loo_defects.py, ma per l'insieme dei difetti:
-            u è affetto se nella sua top-K (--affected-k) del modello BASE c'è
-            almeno un item di un difetto rimosso di cui u non è membro.
-            L'insieme è fissato sul modello base e riusato identico dopo il retrain.
-  3. PRIMA  metriche sul modello base per 6 gruppi di utenti:
-              all, active, lt                 (tutti gli utenti di ogni segmento)
-              aff_all, aff_active, aff_lt     (solo gli affetti di ogni segmento)
-  4. RIMOZIONE  dal training si tolgono solo gli ARCHI dei difetti (utente del
-            difetto x item del difetto presenti nel training). Nodi, valid e test
-            restano invariati.
-  5. RETRAIN  LightGCN riallenato da zero sul training ripulito (stesso seed).
-  6. DOPO   stesse metriche, sugli stessi 6 gruppi di utenti.
-  7. TABELLA  LaTeX riassuntiva (booktabs + multirow) e CSV.
-
-ESCLUSIONE DEI MEMBRI (--exclude-members)
-  none   default: si valutano tutti gli utenti di test
-  own    si tolgono gli utenti elencati nei difetti del file (il loro training cambia
-         direttamente: l'effetto su di loro non passa dal modello)
-  union  si tolgono i membri di TUTTI i file trovati: stessi utenti per ogni metodo,
-         necessario per confrontare i metodi tra loro e per i test appaiati
-  Le metriche per utente (NDCG/Recall per ogni k) sono salvate in <ds>/peruser/*.npz.
-
-DIAGNOSTICA (per capire se la rimozione ha cambiato qualcosa)
-  defect_exposure  quota delle posizioni in top-`--topk` occupate da item toccati dagli
-                   archi rimossi (prima e dopo): l'effetto diretto della rimozione
-  defect_reach     quota di utenti con almeno uno di quegli item in top-`--topk`
-  overlap_base     (solo dopo) quota media della top-`--topk` uguale al modello base
-  unchanged_users  (solo dopo) quota di utenti con top-`--topk` identica al base
-  removed_share    quota delle righe di training rimosse
-
-METRICHE  (identiche a run_my_eval.eval_user_subset / compute_beyond_accuracy)
-  accuratezza  NDCG@k, Recall@k, Hit@k, MRR@k per k in --ks
-  beyond       entropia, coverage, novelty, gini sulle top-`--topk`
-  Utenti e item dei modelli riallenati vengono riportati agli ID del modello
-  base tramite i token, quindi i gruppi di utenti e il catalogo sono gli stessi.
-  coverage: catalogo del modello base. novelty: popolarità del training base
-  (--novelty-pop base, default: il delta dipende solo dalle raccomandazioni) oppure
-  del training di ciascun modello (--novelty-pop own, come run_my_eval.py).
-
-Uso (nella stessa cartella di run_my_eval.py e loo_defects.py)
----
-  python run_removed_eval.py --datasets Books --removed-dir removed_defects
-  python run_removed_eval.py --datasets Books yelp --removed-dir removed_defects --skip-existing
-  python run_removed_eval.py --table-only                  # rifà la tabella dai risultati salvati
-
-  # solo i file con tutti i difetti insieme, o solo quelli di una sorgente
-  python run_removed_eval.py --datasets Books --removed-dir removed_defects --pattern "removed_*__all_*.tsv"
-  python run_removed_eval.py --datasets Books --removed-dir removed_defects --pattern "removed_*__gsdb_f_*.tsv"
-
-  # in parallelo: un job per file (job array SLURM), poi la tabella
-  python run_removed_eval.py --datasets Books --removed-dir removed_defects --list-files
-  sbatch --array=0-15 job.sh      # job.sh: python run_removed_eval.py --datasets Books \\
-                                  #         --removed-dir removed_defects --array --skip-done
-  python run_removed_eval.py --table-only
-
-  --removed-dir può contenere i file direttamente o in sottocartelle per dataset:
-      removed_defects/Books/Books.removed_stratified__all_50K.tsv
-      removed_defects/Books.removed_stratified__all_50K.tsv
-  Nome dei file: removed_<metodo>__<scope>_<budget>.tsv (scope = group_f, gsdb_f, rev2, all).
-  Eccezione: '__lt' e '__active' indicano il segmento obiettivo del metodo, con candidati = all
-  (es. removed_mab__lt_50K → metodo "MAB lt", nella tabella "all").
-  File aggiunti a mano (es. dal MAB): TSV (o CSV) con header e le colonne users+items
-  (token separati da virgola) OPPURE source+defect_id: in quel caso il difetto si ricostruisce
-  dalla riga defect_id di <ds>.<source>.csv. Altre colonne ignorate, righe ripetute contate una volta.
-
-Output (--out, default results/removed/)
-  <ds>/results/<sel>.json   un record per file rimosso (prima, dopo, delta, conteggi)
-  <ds>/affected_<sel>.txt   token degli utenti affetti
-  summary_removed.tex/.csv  una tabella per dataset e scope: l'euristica (heuristic per una
-                            sorgente, stratified per all) contro i regressori, sugli stessi candidati
-"""
 from __future__ import annotations
 
 import argparse
@@ -451,15 +369,7 @@ SCOPE_ALIASES = {"group": "group_f","rev2": "rev2_fff", "gsdb": "gsdb_f", "gsdb"
 
 
 def selection_parts(sel: str):
-    """
-    'regressor_lt__group_f_50K' -> ('regressor_lt', 'group_f')
-    'stratified__all_50K'       -> ('stratified', 'all')
-    'mab_lt__gsdb_f_50K'        -> ('mab_lt', 'gsdb_f')   (anche mab_lt__gsdb_50K)
-    'mab__all_50K'              -> ('mab', 'all')
-    'mab__lt_50K'               -> ('mab_lt', 'all')      segmento obiettivo, candidati = tutti
-    'mab__active_50K'           -> ('mab_active', 'all')
-    File vecchi senza '__' (es. 'random_50K') -> scope 'all'.
-    """
+
     s = re.sub(r"_\d+K?$", "", sel)
     method, _, scope = s.partition("__")
     scope = SCOPE_ALIASES.get(scope, scope)
@@ -870,12 +780,6 @@ def _paper_value(m: dict, key: str):
 
 
 def _paper_table(recs: List[dict], cols, caption: str, label: str, rank_prefixes=None, sig=None) -> str:
-    """
-    Un blocco di righe per segmento (All / Active / Long-tail), una riga per metodo.
-    cols: [(chiave, "Metrica@k", decimali)]. Valori assoluti, più alto = meglio.
-    Base in corsivo (riferimento, non compete). Dentro ogni blocco: grassetto = migliore,
-    sottolineato = secondo, solo tra i metodi che competono (--paper-rank).
-    """
     r0 = recs[0]
     competes = [not rank_prefixes or selection_parts(r["selection"])[0].startswith(tuple(rank_prefixes))
                 for r in recs]
@@ -968,16 +872,6 @@ def holm(pvals: Dict[str, float]) -> Dict[str, float]:
 
 def significance(out: Path, ds: str, recs: List[dict], refs: Dict[str, str], keys, alpha: float,
                  correction: str = "holm"):
-    """
-    Per ogni gruppo di utenti g, riferimento = metodo refs[g] (es. active -> mab_active).
-    t-test appaiato (due code) tra il riferimento e OGNI altro metodo del blocco, sugli utenti
-    valutati da entrambi in g, per ogni metrica in keys. Correzione per confronti multipli
-    (Holm) dentro ogni (g, metrica).
-    Restituisce {(selection, g, metrica): suffisso LaTeX}:
-      "*"  sull'altro metodo: il riferimento è significativamente migliore di lui
-      "†"  sul riferimento: significativamente migliore di tutti gli altri metodi del blocco
-    e un dizionario g -> record di riferimento (per la didascalia).
-    """
     cache = {}
 
     def z_of(r):
