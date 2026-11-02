@@ -140,38 +140,56 @@ Main arguments:
 - `--tag`: name of the run, used to save the results.
 
 
-## Retraining 
-Retrain for final evaluation. In this case, the retraining is performed with all the selected edges removed. 
+## Retraining
+Retrain for final evaluation. In this case, the retraining is performed with all the selected edges removed, round by round, by the active learning phase. `--skip-done` and `--skip-existing` skip the runs already completed, so the command can be relaunched safely.
 
 ```bash
-python3 src/recbole_f/run_removed_eval_1.py --datasets ${DATASET} \
-        --removed-dir /src/recbole_f/removed_defects  \
+python3 src/recbole_f/run_removed_eval_1.py --datasets Books \
+        --removed-dir src/recbole_f/removed_defects \
         --skip-done --skip-existing \
-	--out /src/recbole_f/removed_defects
+        --out src/recbole_f/removed_defects
 ```
+
+Run it once for each dataset: `Beauty_and_Personal_Care`, `yelp`, `Books`.
 
 
 ## Final evaluation
-Get the performances in latex tables and plots.
+Get the performances in latex tables and plots. It is done in two steps, both run once for each dataset.
 
+**1. Dump.** Collects the retrained results and the candidate defects of each detector into `--out`. `candidates.npz` is rebuilt only if it does not exist: to rebuild it (e.g. after changing the sources), move or delete `<out>/<dataset>/lists/candidates.npz` before running.
 
 ```bash
-python3 src/recbole_f/dump_for_analysis.py dump --no-train \
+python3 src/recbole_f/dump_for_analysis.py dump --datasets Books --no-train \
         --removed-dir src/recbole_f/removed_defects \
-        --rre-module run_removed_eval_1 --out src/recbole_f/target_results  
+        --rre-module run_removed_eval_1 --out src/recbole_f/results/targeting_final \
+        --curves 10 --curve-k 10 20 50 \
+        --sources group_ff gsdb_ff rev2_fff
 ```
 
+`--sources` are the detector backbones of the dataset:
+
+
+
+**2. Tables and plots.** `--out` must be the same folder used in the dump (it has to contain `<dataset>/lists/`).
+
 ```bash
-python3 src/recbole_f/eval.py  \
-            --out src/recbole_f/target_results   \
-            --methods heuristic mab_all \
-            --variant retrain \
-            --load-variants retrain \
-            --k 10 20 50 \
-            --affected-k 20 \
-            --target-pool detected \
-            --one-baseline
+python3 src/recbole_f/final_analysis_4_all.py \
+        --datasets Books \
+        --out src/recbole_f/results/targeting_final \
+        --methods heuristic mab_all \
+        --variant retrain \
+        --load-variants retrain \
+        --k 10 20 50 \
+        --affected-k 20 \
+        --tag affk20 \
+        --target-pool detected \
+        --one-baseline
 ```
+
+Variants of the analysis (add the flags to the command above and change `--tag` accordingly):
+
+
+`--target-pool detected` uses all the defects found by the detectors as pool. 
 
 ## Ablation study
 Ablation and sensitivity analysis of SCRIBA. Each case is a run of the active learning phase on `Beauty_and_Personal_Care`, `yelp` and `Books`, each with its three detector backbones (`rev2_fff`, `group_ff`, `gsdb_ff`; `group_f` instead of `group_ff` for Beauty_and_Personal_Care). The results are saved inside `mab/results/`, distinguished by the `--tag`.
