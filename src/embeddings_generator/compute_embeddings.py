@@ -1,33 +1,4 @@
-"""
-Defect embedding [media utenti ; media item] per ogni dataset e ogni file
-di gruppi (group_f, gsdb_f, ...), con il collegamento riga -> defect.
 
-Struttura attesa:
-  {data_dir}/{dataset}/{dataset}.train.csv       interazioni (user_id, item_id, rating, ...)
-  {data_dir}/{dataset}/{dataset}.{source}.csv    gruppi, TSV con colonne
-                                                 n_users, n_items, users, items, ...
-
-Chiave di un defect: (dataset, source, defect_id), dove defect_id e' la
-posizione della riga nel file dei gruppi (0 = prima riga dopo l'header).
-Usa la stessa chiave per le label LOO.
-
-Output per ogni (dataset, source), accanto al file dei gruppi:
-  {dataset}.{source}_emb.pt          {"V": [m, 2*out_dim], "defect_id": [...]}
-  {dataset}.{source}_emb_index.csv   dataset, source, defect_id, n_users, n_items
-                                     (riga r del csv = riga r di V)
-
-Output complessivo, solo per il passive set (--train-on), in --out-dir:
-  std_stats.pt        media/std per standardizzare (fit SOLO sul passive set;
-                      riusale identiche nell'active phase)
-  passive_index.csv   una riga per defect: dataset, source, defect_id, ...
-  passive_X.pt        embedding standardizzati, righe allineate a passive_index.csv
-
-Uso:
-  python compute_defect_embeddings.py --out-dim 16
-  python compute_defect_embeddings.py --retrain            # riaddestra l'encoder
-
-Richiede graphsage_scriba.py nella stessa cartella.
-"""
 
 import argparse
 import os
@@ -48,32 +19,8 @@ BASE_DATA_DIR = (ROOT_DIR / "../data/original/").resolve()
 EMBEDDINGS_DIR = (ROOT_DIR / "../node_embeddings/").resolve()
 
 PASSIVE = ["Baby_Products", "Toys_and_Games", "Pet_Supplies"]
-ACTIVE = ["Books_injseg", "yelp_injseg", "Beauty_and_Personal_Care_injseg"]
-ACTIVE = ["Health_and_Household"]
+ACTIVE = ["Books", "yelp", "Beauty_and_Personal_Care"]
 LABELED = PASSIVE
-
-"""
-Per ogni dataset salva UN pickle con gli embedding dei suoi defect.
-
-  passivi -> {dataset}.pkl = {"X", "defect_id", "source", "impact", "n_affected_all"}
-  attivi  -> {dataset}.pkl = {"X", "defect_id", "source"}
-
-  X          [m, 2*out_dim] float32, standardizzato (stessa scala per tutti)
-  defect_id  [m] riga del defect nel file dei gruppi
-  source     [m] "group_f" / "gsdb_f" (da quale file viene il defect)
-  impact     [m] n_affected_all * (-all_loc_d_prop_rr_best)   (solo passivi)
-
-Riga r di X = defect (source[r], defect_id[r]).
-
-Salva anche std_stats.pkl (media/std dei passivi): serve nell'active phase
-per standardizzare gli embedding ricalcolati sul grafo aggiornato.
-
-Uso (da qualsiasi cartella):
-  python compute_embeddings.py
-  python compute_embeddings.py --retrain --out-dim 16
-
-Richiede graphsage.py (la versione nuova) nella stessa cartella.
-"""
 
 import argparse
 import os
@@ -93,17 +40,12 @@ ROOT = Path(__file__).resolve().parents[1]
 #ROOT      = Path(__file__).resolve().parent
 
 
-SOURCES = ["group_f", "gsdb_f", "rev2","group_inj"]
 SOURCES = ["group_ff", "gsdb_ff", "rev2_fff"]
 
 LOO_NAME = {
-    "group_f": "{d}_loo_0_15000.csv",
     "group_ff": "{d}___loo_group_ff_0_20000_tndcg.csv",
-    "group_inj": "{d}_loo_group_inj_0_15000.csv",
-    "gsdb_f": "{d}_loo_gsdb_0_15000.csv",
     "gsdb_ff": "{d}___loo_gsdb_ff_0_20000_tndcg.csv",
     "rev2_fff": "{d}___loo_rev2_fff_0_20000_tndcg.csv",
-    "rev2": "{d}_loo_rev2_0_15000.csv",
 }
 
 
