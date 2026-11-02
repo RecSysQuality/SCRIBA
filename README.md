@@ -144,7 +144,10 @@ Main arguments:
 Retrain for final evaluation. In this case, the retraining is performed with all the selected edges removed. 
 
 ```bash
-python3 src/recbole_f/run_removed_eval_1.py 
+python3 src/recbole_f/run_removed_eval_1.py --datasets ${DATASET} \
+        --removed-dir /src/recbole_f/removed_defects  \
+        --skip-done --skip-existing \
+	--out /src/recbole_f/removed_defects
 ```
 
 
@@ -153,7 +156,9 @@ Get the performances in latex tables and plots.
 
 
 ```bash
-python3 src/recbole_f/dump_for_analysis.py 
+python3 src/recbole_f/dump_for_analysis.py dump --no-train \
+        --removed-dir src/recbole_f/removed_defects \
+        --rre-module run_removed_eval_1 --out src/recbole_f/target_results  
 ```
 
 ```bash
