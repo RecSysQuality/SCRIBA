@@ -162,7 +162,15 @@ python3 src/recbole_f/dump_for_analysis.py dump --no-train \
 ```
 
 ```bash
-python3 src/recbole_f/eval.py 
+python3 src/recbole_f/eval.py  \
+            --out src/recbole_f/target_results   \
+            --methods heuristic mab_all \
+            --variant retrain \
+            --load-variants retrain \
+            --k 10 20 50 \
+            --affected-k 20 \
+            --target-pool detected \
+            --one-baseline
 ```
 
 ## Ablation study
