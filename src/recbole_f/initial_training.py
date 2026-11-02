@@ -1,46 +1,3 @@
-#!/usr/bin/env python3
-"""
-run_cf.py
-=========
-Allena LightGCN, NGCF e GCMC su tutte le varianti di rumore.
-
-DIFFERENZE RISPETTO A run_experiments.py (modelli sequenziali)
---------------------------------------------------------------
-1. SPLIT STRATEGY — RS invece di LOO
-   LightGCN, NGCF e GCMC sono modelli CF non sequenziali. Non usano
-   l'ordinamento temporale per fare predizioni. Lo split è
-   quindi Random Split (80/10/10) invece di Leave-One-Out.
-   Il file .inter contiene TUTTI i dati; RecBole fa RS automaticamente.
-
-2. LOSS / NEG SAMPLING — BPR (LightGCN/NGCF) o niente (GCMC)
-   LightGCN e NGCF usano BPR con neg sampling esplicito.
-   GCMC è rating prediction (regressione): niente neg sampling,
-   niente full_sort_predict. La funzione is_rating_model() isola
-   questa logica così run_single rimane un unico entry point.
-
-3. FULL_SORT_PREDICT vs PREDICT
-   LightGCN/NGCF: full_sort_predict (score su tutti gli item).
-   GCMC: predict() su coppie (u, i) osservate → RMSE/MAE.
-   Le beyond-accuracy e le metriche active/lt sono skippate per
-   GCMC (non ha senso calcolare coverage/novelty su rating pred).
-
-4. ITEM EMBEDDING
-   LightGCN: model.item_embedding (nn.Embedding).
-   NGCF:     model.embedding_dict['item_id'] (ParameterDict).
-   GCMC:     model.encoder.W (matrice peso encoder) — non usato
-             per diversity perché il task è diverso.
-   La funzione get_item_emb() gestisce tutti i casi.
-
-5. STAGING — rating incluso per GCMC
-   Lo staging per GCMC emette anche la colonna rating:float.
-   Lo staging per LightGCN/NGCF rimane invariato (solo u/i/ts).
-   La funzione stage_dataset() accetta il flag include_rating.
-
-6. AUC — calcolato in post-processing per GCMC
-   RecBole non calcola AUC nativamente per regression task.
-   Viene calcolato binarizzando i rating: ≥4 = positivo (1-5 stelle).
-   sklearn.metrics.roc_auc_score viene usato su predicted vs true.
-"""
 
 import argparse
 import json
@@ -150,71 +107,6 @@ def is_rating_model(model_name: str) -> bool:
     return model_name in RATING_MODELS
 
 
-# ==============================================================================
-#  IPERPARAMETRI PER DATASET × MODELLO
-# ==============================================================================
-#
-# LOGICA GENERALE
-# ───────────────
-# I parametri qui vengono iniettati in parameter_dict dentro run_single()
-# e sovrascrivono i valori nei file .yaml (RecBole applica config_dict per ultimo).
-# Stessa struttura di MODEL_HPARAMS in run_experiments.py (modelli sequenziali).
-#
-# DIMENSIONI DEI DATASET
-#   Toys_and_Games  → "piccolo"  (43K utenti, 14K item,  753K rating, sparsità 99.94%)
-#   yelp            → "medio"    (99K utenti, 56K item,  2.76M rating, sparsità 99.95%)
-#   Books           → "grande"   (139K utenti, 113K item, 3.34M rating, sparsità 99.97%)
-#
-# PRINCIPI PER PARAMETRO
-# ───────────────────────
-# embedding_size
-#   Scala con la dimensione del catalogo.
-#   Toys (14K item) → 64; Yelp (56K) → 128; Books (113K) → 128.
-#   Allineato a hidden_size dei modelli sequenziali per confronto diretto
-#   sulle metriche di diversity/coverage basate su embedding.
-#
-# n_layers (LightGCN) / hidden_size_list (NGCF)
-#   LightGCN: 3 layer su dataset piccoli/medi (ottimale paper originale).
-#             2 layer su Books (sparsità 99.97%): più layer causa over-smoothing
-#             su nodi con pochissimi archi.
-#   NGCF: [64,64,64] su Toys; [128,128,128] su Yelp/Books.
-#         Con Toys la concatenazione produce vettore 64*4=256.
-#         Con Yelp/Books: 128*4=512 — stessa scala di inner_size dei transformer.
-#
-# reg_weight
-#   LightGCN: 1e-4 default; 1e-3 su Books per penalizzare embedding item rari
-#             (113K item, sparsità 99.97% → molti item con pochissime interazioni).
-#   NGCF: 1e-5 default (più parametri di LightGCN → reg più bassa);
-#         1e-4 su Books per stesso ragionamento.
-#
-# node_dropout (NGCF)
-#   0.1 su Toys/Yelp: dropout moderato standard paper originale.
-#   0.0 su Books: sparsità altissima, i nodi rari non possono permettersi
-#   di essere droppati ulteriormente.
-#
-# dropout_prob (GCMC)
-#   0.7 su Toys/Yelp: dropout alto per dataset sparsi (paper originale).
-#   0.5 su Books: sparsità 99.97% → segnale già scarso, dropout troppo
-#   alto taglia via informazione preziosa sulle poche coppie osservate.
-#
-# learning_rate
-#   0.001 su Toys (catalogo piccolo, embedding piccoli, gradienti stabili).
-#   0.001 su Yelp (più dati per item rispetto a Books, gradienti meno rumorosi).
-#   0.0005 su Books (113K item rari → gradienti noisier, lr più basso stabilizza).
-#   Coerente con il ragionamento dei modelli sequenziali in run_experiments.py.
-#
-# epochs
-#   Toys: 200 — dataset piccolo, converge in fretta con early stopping a 20.
-#   Yelp: 200 — abbondanza di dati compensa la velocità di convergenza.
-#   Books: 300 — sparsità altissima, segnale debole per item rari,
-#               serve più tempo per convergere (allineato al config sequenziale Books).
-# ==============================================================================
-#  IPERPARAMETRI PER DATASET × MODELLO
-# ==============================================================================
-# Parametri comuni a tutti i dataset.
-# n_layers identico ovunque: determina quanto lontano si propaga un difetto,
-# quindi va tenuto fisso perché le label LOO siano confrontabili tra dataset
-# (il regressore è allenato su alcuni dataset e applicato ad altri).
 _COMMON_LIGHTGCN = {
     "n_layers":            3,
     "reg_weight":          1.0e-4,
@@ -225,11 +117,6 @@ _COMMON_LIGHTGCN = {
     "valid_metric_bigger": True,
 }
 
-# Parametri che scalano con la dimensione del dataset.
-# epochs è solo il massimo: il training si ferma con early stopping.
-# Patience effettiva = eval_step × stopping_step epoche.
-# eval_batch_size in full-sort è in "interazioni": RecBole valuta
-# eval_batch_size // n_items utenti per batch.
 _TIERS = {
     "small": {    # < 1M interazioni, ≤ ~80K item
         "embedding_size":   64,
@@ -618,18 +505,7 @@ def get_item_emb(trained_model) -> np.ndarray | None:
 #  BEYOND-ACCURACY METRICS — identiche a run_experiments.py
 # ==============================================================================
 def calculate_entropy(topk_lists: list[list[int]]) -> float:
-    """
-    Shannon entropy sulla distribuzione empirica degli item raccomandati
-    (aggregata su tutti gli utenti del subset passato).
 
-    H = -sum_i p_i * log2(p_i),  p_i = frequenza dell'item i / totale raccomandazioni
-
-    Alta entropia → raccomandazioni distribuite su molti item (diversità).
-    Bassa entropia → concentrazione su pochi item popolari (popularity bias).
-
-    Nota: qui topk_lists è già list[list[int]] (item id per utente),
-    niente tuple (user, items) da spacchettare come nel tuo snippet originale.
-    """
     all_rec = [iid for lst in topk_lists for iid in lst]
     if not all_rec:
         return 0.0
@@ -1011,13 +887,6 @@ def _build_uid_to_test_item(dataset) -> dict[int, int]:
     return uid_to_pos
 
 
-# ==============================================================================
-#  EVAL SU SOTTOINSIEME DI UTENTI
-# ==============================================================================
-
-# ==============================================================================
-#  EVAL SU SOTTOINSIEME DI UTENTI (o su tutti gli utenti)
-# ==============================================================================
 def _topk_accuracy(hits: torch.Tensor, n_pos: torch.Tensor, ks) -> dict:
     """
     Metriche di accuratezza calcolate come in RecBole.
@@ -1071,26 +940,7 @@ def eval_user_subset(
     topk: int = 10,
     ks: tuple[int, ...] = (10, 20, 50),
 ) -> dict:
-    """
-    Valuta un LightGCN/NGCF già allenato su un sottoinsieme di utenti
-    (active o long-tail), oppure su tutti gli utenti se user_set è None.
 
-    Calcola Recall/NDCG/MRR/Hit@K e le metriche beyond-accuracy
-    (coverage, novelty, gini, entropy, diversity) sulle top-`topk`.
-
-    Scelte principali:
-    - Usa la STESSA configurazione del training (base_parameter_dict),
-      quindi stesso split e stessi item di test.
-    - Il grafo del modello è costruito sul solo training set
-      (train_data.dataset), senza gli archi di validazione e test.
-    - Gli score vengono rimessi in forma [n_utenti, n_item]: RecBole
-      li restituisce appiattiti.
-    - Gli item già visti in training vengono esclusi dalle top-K,
-      come fa il trainer di RecBole.
-    - Il ground truth arriva direttamente dal dataloader di test
-      (positive_u, positive_i), senza ricostruirlo dai timestamp.
-    - Popolarità e novelty sono calcolate sulle sole interazioni di training.
-    """
     if user_set is not None and not user_set:
         return {"error": f"user_set vuoto per {subset_label}"}
 
@@ -1334,10 +1184,6 @@ def eval_user_subset_old(
 
                 scores = model.full_sort_predict(batch)
 
-                # LightGCN/NGCF con RS split possono restituire
-                # full_sort_predict come 1D (n_items,) quando il batch
-                # ha un solo utente, o come 2D (batch, n_items) altrimenti.
-                # Normalizziamo sempre a 2D prima di procedere.
                 if scores.dim() == 1:
                     scores = scores.unsqueeze(0)
 
@@ -1503,13 +1349,9 @@ def run_single(
             },
         }
 
-    # Iperparametri specifici per (dataset × modello): sovrascrivono il .yaml
-    # perché config_dict è applicato per ultimo da RecBole.
-    # Stesso meccanismo di run_experiments.py per i modelli sequenziali.
+
     parameter_dict.update(get_model_hparams(dataset_name, model))
 
-    # ── 2. Training ───────────────────────────────────────────────────────────
-    # ── 2. Training (oppure solo load del checkpoint) ─────────────────────────
     t0 = time.time()
     try:
         cfg = Config(
