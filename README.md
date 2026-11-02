@@ -82,6 +82,13 @@ LightGCN model is trained on each dataset (before extraction).
 python3 src/recbole_f/initial_training.py 
 ```
 
+## LOO Impact attribution
+In this phase we run LOO
+
+```bash
+python3 src/recbole_f/loo_defects.py 
+```
+
 ## Embeddings
 Generate defects embeddings. 
 
@@ -90,7 +97,12 @@ python3 src/embeddings_generator/compute_embeddings.py
 ```
 
 
-## Impact attribution
+## Train predictor
+Train the impact predictor.
+
+```bash
+python3 src/impact_predictor/train.py 
+```
 
 ## Active learning
 
