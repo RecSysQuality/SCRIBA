@@ -60,9 +60,27 @@ src/data/original/
 pip install -r requirements.txt
 ```
 
+## Preprocessing
+Preprocessing prepares the dataset to the subsequent extraction and in general, to the enire pipeline
+
+```bash
+python3 preprocessing.py
+```
+
+
 ## Extraction
+Extraction allows to extract defects from the 6 datasets. The defects will be saved in: data/original/<dataset>/ folder.
+
+```bash
+python3 extraction/main_extraction.py
+```
 
 ## Training
+LightGCN model is trained on each dataset (before extraction). 
+
+```bash
+python3 src/recbole_f/initial_training.py --datasets Books Beauty_and_Personal_Care Baby_Products yelp Toys_and_Games Pet_Supplies
+```
 
 ## Embeddings
 
