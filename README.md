@@ -206,7 +206,7 @@ For `gsdb_ff` use `--holdout 20`, for the other backbones `--holdout 100`.
 | `pool3` | Pool multiplier `m` = 3 | `--pool-mult 3` |
 | `pool10` | Pool multiplier `m` = 10 | `--pool-mult 10` |
 | `pool20` | Pool multiplier `m` = 20 | `--pool-mult 20` |
-| `b10` | Max 10 defects per round | `--budget-per-round 50000000 --max-per-round 10` |
-| `b100` | Max 100 defects per round | `--budget-per-round 50000000 --max-per-round 100` |
-| `B200` | Max 200 defects per round | `--budget-per-round 50000000 --max-per-round 200` |
-| `B500` | Max 500 defects per round | `--budget-per-round 50000000 --max-per-round 500` |
+| `b10` | Max 10 defects per round | ` --max-per-round 10` |
+| `b100` | Max 100 defects per round | ` --max-per-round 100` |
+| `B200` | Max 200 defects per round | ` --max-per-round 200` |
+| `B500` | Max 500 defects per round | ` --max-per-round 500` |
