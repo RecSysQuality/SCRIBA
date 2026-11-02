@@ -144,7 +144,7 @@ Main arguments:
 Retrain for final evaluation. In this case, the retraining is performed with all the selected edges removed. 
 
 ```bash
-python3 src/recbole_f/final_retraining.py 
+python3 src/recbole_f/run_removed_eval_1.py 
 ```
 
 
@@ -153,7 +153,7 @@ Get the performances in latex tables and plots.
 
 
 ```bash
-python3 src/recbole_f/dump.py 
+python3 src/recbole_f/dump_for_analysis.py 
 ```
 
 ```bash
