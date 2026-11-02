@@ -79,10 +79,16 @@ python3 extraction/main_extraction.py
 LightGCN model is trained on each dataset (before extraction). 
 
 ```bash
-python3 src/recbole_f/initial_training.py --datasets Books Beauty_and_Personal_Care Baby_Products yelp Toys_and_Games Pet_Supplies
+python3 src/recbole_f/initial_training.py 
 ```
 
 ## Embeddings
+Generate defects embeddings. 
+
+```bash
+python3 src/embeddings_generator/compute_embeddings.py 
+```
+
 
 ## Impact attribution
 
