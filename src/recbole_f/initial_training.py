@@ -80,18 +80,11 @@ STAGING_DIR   = ROOT_DIR / "staging_cf"
 # ==============================================================================
 DATASETS = {
     "Books": BASE_DATA_DIR / "Books",
-    "Books_injseg": BASE_DATA_DIR / "Books_injseg",
     "Toys_and_Games": BASE_DATA_DIR / "Toys_and_Games",
-    "Office_Products": BASE_DATA_DIR / "Office_Products",
-    "Sports_and_Outdoors": BASE_DATA_DIR / "Sports_and_Outdoors",
     "Baby_Products": BASE_DATA_DIR / "Baby_Products",
     "Beauty_and_Personal_Care": BASE_DATA_DIR / "Beauty_and_Personal_Care",
-    "Health_and_Household": BASE_DATA_DIR / "Health_and_Household",
-    "Beauty_and_Personal_Care_injseg": BASE_DATA_DIR / "Beauty_and_Personal_Care_injseg",
     "Pet_Supplies": BASE_DATA_DIR / "Pet_Supplies",
     "yelp": BASE_DATA_DIR / "yelp",
-    "Electronics": BASE_DATA_DIR / "Electronics",
-    "yelp_injseg": BASE_DATA_DIR / "yelp_injseg",
 }
 
 
