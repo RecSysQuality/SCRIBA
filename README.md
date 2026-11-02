@@ -86,7 +86,7 @@ python3 src/recbole_f/initial_training.py
 In this phase we run LOO
 
 ```bash
-python3 src/recbole_f/loo_defects.py 
+python3 src/recbole_f/loo_defects_tndcg.py 
 ```
 
 ## Embeddings
@@ -101,11 +101,51 @@ python3 src/embeddings_generator/compute_embeddings.py
 Train the impact predictor.
 
 ```bash
-python3 src/impact_predictor/train.py 
+python3 src/impact_regressor/train.py 
 ```
 
 ## Active learning
+Run entire active learning phase: this comprises also mab update, predictor update, embeddings update. The removed defects round by round are all saved inside `mab/results/`.
+
+## Active learning
+Run entire active learning phase: this comprises also mab update, predictor update, embeddings update. The removed defects round by round are all saved inside `mab/results/`.
+
+The example below runs SCRIBA on the Books dataset, with the GSDB detector as backbone, a total budget of 10000 edges and 1500 edges per round.
+
+```bash
+python3 src/mab/mab_tndcg.py \
+    --defect-type gsdb_ff --online-dataset Books \
+    --targets all --policies mab --pools regressor --pool-mult 3 \
+    --seeds 0 \
+    --regressor src/impact_regressor/scriba_regressor_out/final_model_tndcg.pkl \
+    --regressor-active src/impact_regressor/scriba_regressor_out/final_model_active.pkl \
+    --regressor-lt src/impact_regressor/scriba_regressor_out/final_model_lt.pkl \
+    --emb-dir src/node_embeddings/defects \
+    --sage-encoder src/node_embeddings/weights/sage_shared_tndcg.pt \
+    --yhat seg --reg-update ridge --reg-train-on chosen+probe \
+    --warm-neff 200 --use-exposure --only-touching --hurdle \
+    --max-defects 300000 --feature-cache src/mab/features \
+    --budget-per-round 500 --max-per-round 50 --total-budget 10000 \
+    --probe 20 --holdout 20 --sage-every 5 --probe-update --no-online-scale \
+    --reward-transform slog --mab-stop --patience 11800000 --impact tndcg \
+    --tag full
+```
+
+Main arguments:
+- `--defect-type`: anomaly detector used as backbone (`rev2_fff`, `group_ff`, `gsdb_ff`; `group_f` for Beauty_and_Personal_Care).
+- `--online-dataset`: the unseen graph on which active learning is run (`Beauty_and_Personal_Care`, `yelp`, `Books`).
+- `--total-budget`, `--budget-per-round`: total budget `B` and per-round budget `b` (in edges). `--pool-mult` is `m`, so the pool contains up to `m · b` edges.
+- `--max-per-round`: maximum number of defects selected per round.
+- `--regressor*`: pretrained impact predictors; `--emb-dir` and `--sage-encoder` contain the defect embeddings and the GraphSAGE encoder.
+- `--reg-update`: how the predictor is refitted online (`ridge`, or `none` to keep it frozen).
+- `--holdout`: use 100 for all backbones, 20 for `gsdb_ff`.
+- `--tag`: name of the run, used to save the results.
+
+
+## Retraining 
+
 
 ## Final evaluation
+
 
 ## Ablation study
