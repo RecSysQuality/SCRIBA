@@ -104,8 +104,6 @@ Train the impact predictor.
 python3 src/impact_regressor/train.py 
 ```
 
-## Active learning
-Run entire active learning phase: this comprises also mab update, predictor update, embeddings update. The removed defects round by round are all saved inside `mab/results/`.
 
 ## Active learning
 Run entire active learning phase: this comprises also mab update, predictor update, embeddings update. The removed defects round by round are all saved inside `mab/results/`.
@@ -143,9 +141,72 @@ Main arguments:
 
 
 ## Retraining 
+Retrain for final evaluation. In this case, the retraining is performed with all the selected edges removed. 
+
+```bash
+python3 src/recbole_f/final_retraining.py 
+```
 
 
 ## Final evaluation
+Get the performances in latex tables and plots.
 
+
+```bash
+python3 src/recbole_f/dump.py 
+```
+
+```bash
+python3 src/recbole_f/eval.py 
+```
 
 ## Ablation study
+Ablation and sensitivity analysis of SCRIBA. Each case is a run of the active learning phase on `Beauty_and_Personal_Care`, `yelp` and `Books`, each with its three detector backbones (`rev2_fff`, `group_ff`, `gsdb_ff`; `group_f` instead of `group_ff` for Beauty_and_Personal_Care). The results are saved inside `mab/results/`, distinguished by the `--tag`.
+
+Every case uses the command below: `<POLICY>`, `<POOL>`, `<YHAT>` and `<REG_UPDATE>` are taken from the grid, and the extra flags of the grid are appended at the end (the last occurrence of a flag overrides the default).
+
+```bash
+python3 src/mab/mab_tndcg.py \
+    --defect-type gsdb_ff --online-dataset Books \
+    --targets all --policies <POLICY> --pools <POOL> --pool-mult 5 \
+    --seeds 0 \
+    --regressor src/impact_regressor/scriba_regressor_out/final_model_tndcg.pkl \
+    --regressor-active src/impact_regressor/scriba_regressor_out/final_model_active.pkl \
+    --regressor-lt src/impact_regressor/scriba_regressor_out/final_model_lt.pkl \
+    --emb-dir src/node_embeddings/defects \
+    --sage-encoder src/node_embeddings/weights/sage_shared_tndcg.pt \
+    --yhat <YHAT> --reg-update <REG_UPDATE> --reg-train-on chosen+probe \
+    --warm-neff 200 --use-exposure --only-touching --hurdle \
+    --max-defects 300000 --feature-cache src/mab/features \
+    --budget-per-round 1500 --max-per-round 50 --total-budget 10000 \
+    --probe 20 --holdout 20 --sage-every 5 --probe-update --no-online-scale \
+    --reward-transform slog --mab-stop --patience 11800000 --impact tndcg \
+    --tag <TAG> <EXTRA_FLAGS>
+```
+
+For `gsdb_ff` use `--holdout 20`, for the other backbones `--holdout 100`.
+
+**Ablation**
+
+| Tag | Description | `<POLICY>` | `<POOL>` | `<YHAT>` | `<REG_UPDATE>` | Extra flags |
+|---|---|---|---|---|---|---|
+| `nomab` | Predictor only, no bandit | `regressor` | `regressor` | `seg` | `ridge` | |
+| `noreg` | Bandit without predictor | `mab` | `none` | `none` | `ridge` | |
+| `frozen` | Predictor not updated online | `mab` | `regressor` | `seg` | `none` | |
+| `single` | Whole budget in one round | `mab` | `regressor` | `seg` | `ridge` | `--budget-per-round 50000 --max-per-round 0 --rounds 1` |
+| `random` | Random selection | `random` | `random` | `seg` | `ridge` | |
+
+**Sensitivity** (`<POLICY>=mab`, `<POOL>=regressor`, `<YHAT>=seg`, `<REG_UPDATE>=ridge`)
+
+| Tag | Parameter | Extra flags |
+|---|---|---|
+| `alpha0` | Exploration coefficient 0 | `--alpha 0` |
+| `alpha03` | Exploration coefficient 0.3 | `--alpha 0.3` |
+| `alpha15` | Exploration coefficient 1.5 | `--alpha 1.5` |
+| `pool3` | Pool multiplier `m` = 3 | `--pool-mult 3` |
+| `pool10` | Pool multiplier `m` = 10 | `--pool-mult 10` |
+| `pool20` | Pool multiplier `m` = 20 | `--pool-mult 20` |
+| `b10` | Max 10 defects per round | `--budget-per-round 50000000 --max-per-round 10` |
+| `b100` | Max 100 defects per round | `--budget-per-round 50000000 --max-per-round 100` |
+| `B200` | Max 200 defects per round | `--budget-per-round 50000000 --max-per-round 200` |
+| `B500` | Max 500 defects per round | `--budget-per-round 50000000 --max-per-round 500` |
