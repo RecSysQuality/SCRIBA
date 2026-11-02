@@ -1,34 +1,3 @@
-"""
-Feature comportamentali per gruppi di reviewer (Mukherjee, Liu, Glance - WWW 2012,
-"Spotting Fake Reviewer Groups in Consumer Reviews"), calcolate sulle biclique
-massimali trovate da maximal_bicliques.py.
-
-ESCLUSE perche' richiedono il testo delle recensioni: GCS, GMCS (gruppo), ICS
-(individuale). Tutte le altre sono implementate.
-
-Feature di gruppo (Sec. 5.1 del paper)
-  GTW   Group Time Window       - il gruppo ha recensito in una finestra stretta
-  GD    Group Deviation         - rating del gruppo lontani da quelli degli altri
-  GETF  Group Early Time Frame  - il gruppo e' arrivato presto sul prodotto
-  GSR   Group Size Ratio        - quota di recensori del prodotto che sono del gruppo
-  GS    Group Size              - dimensione del gruppo (normalizzata)
-  GSUP  Group Support Count     - n. prodotti lavorati insieme (normalizzato)
-
-Feature individuali (Sec. 5.2), aggregate a livello di gruppo con avg e max
-  IRD   Individual Rating Deviation
-  IETF  Individual Early Time Frame
-  IMC   Individual Member Coupling
-
-Tutte in [0, 1], 1 = comportamento piu' sospetto (tranne IMC, vedi nota sotto).
-
-Input atteso: TSV con una riga per recensione
-    user_id <TAB> item_id <TAB> rating <TAB> data
-rating numerico su scala 1-5, data in formato ISO (YYYY-MM-DD) o timestamp unix.
-
-Uso:
-    python group_features.py reviews.tsv --min-users 3 --min-items 2 \
-        --features GTW,GD,GETF,GSR,GS,GSUP,IRD,IETF,IMC --out groups.tsv
-"""
 
 from datetime import datetime
 from collections import defaultdict
@@ -47,7 +16,6 @@ INDIV_FEATURES = ["IRD", "IETF", "IMC"]
 POP_FEATURES = ["ITEM_POP", "USER_POP"]
 ALL_FEATURES = GROUP_FEATURES + INDIV_FEATURES + POP_FEATURES
 
-# valori stimati nel paper (Sec. 9.1) via hill climbing: tau=2.87 mesi, beta=8.86 mesi
 DEFAULT_TAU_DAYS = 2.87 * 30.44
 DEFAULT_BETA_DAYS = 8.86 * 30.44
 
@@ -72,12 +40,6 @@ def parse_day(s):
 
 
 class ReviewData:
-    """
-    Contenitore compatto delle recensioni.
-      item_rev[i]   = {user: (rating, day)}   -> tutte le recensioni del prodotto i
-      item_first[i] = A(p), data della prima recensione del prodotto (proxy del lancio)
-      item_sum[i], item_cnt[i] -> per calcolare al volo la media degli "altri"
-    """
 
     def __init__(self):
         self.item_rev = defaultdict(dict)
@@ -112,16 +74,6 @@ class ReviewData:
                 rd.add(u, i, float(r), parse_day(d))
         return rd
 
-    # def graph(self):
-    #     """Estrae user2items / item2users per l'enumerazione delle biclique."""
-    #     item2users = {i: set(rev) for i, rev in self.item_rev.items()}
-    #     user2items = defaultdict(set)
-    #     for i, us in item2users.items():
-    #         for u in us:
-    #             user2items[u].add(i)
-    #     return dict(user2items), item2users
-
-
 
     def graph(self, exclude_items=None):
         """user2items / item2users per l'enumerazione, senza gli item esclusi."""
@@ -134,7 +86,6 @@ class ReviewData:
                 user2items[u].add(i)
         return dict(user2items), item2users
 
-    # ------------------------------------------------------------- helper
 
     def group_days(self, users, item):
         return [self.item_rev[item][u][1] for u in users if u in self.item_rev[item]]
@@ -150,7 +101,6 @@ class ReviewData:
         return (s_oth / n_oth) if n_oth > 0 else None
 
 
-# ------------------------------------------------------------- feature calc
 def popular_items(rd, pct):
     """Item con un numero di recensioni sopra il percentile `pct`."""
     if pct <= 0 or pct >= 100:
@@ -280,23 +230,18 @@ def aggregate(per_member):
     return (sum(v) / len(v), max(v)) if v else (0.0, 0.0)
 
 
-# ------------------------------------------------------------------ pipeline
 
 def score_groups(rd, min_users=3, min_items=2, features=None,
                  tau=DEFAULT_TAU_DAYS, beta=DEFAULT_BETA_DAYS,
                  max_groups=0, verbose=True, exclude_items=None):
-    """
-    Enumera le biclique massimali e calcola le feature selezionate.
-    Restituisce una lista di dict: {'users', 'items', <feature>: valore, ...}
-    """
+
     features = set(features or ALL_FEATURES)
     unknown = features - set(ALL_FEATURES)
     if unknown:
         raise ValueError(f"feature sconosciute: {sorted(unknown)}. "
                          f"Disponibili: {ALL_FEATURES}")
 
-    # u2i, i2u = rd.graph()
-    # u2i, i2u = prune(u2i, i2u, min_users, min_items, verbose=verbose)
+
     u2i, i2u = rd.graph(exclude_items)
     u2i, i2u = prune(u2i, i2u, min_users, min_items, verbose=verbose)
 
@@ -319,8 +264,7 @@ def score_groups(rd, min_users=3, min_items=2, features=None,
             print("[score] limite gruppi raggiunto", file=sys.stderr)
             break
 
-    # normalizzazione globale di GS e GSUP (eq. 7 e 8: si dividono per il max
-    # su TUTTI i gruppi scoperti, quindi serve conoscere l'insieme completo)
+
     for raw, name in (("_GS_raw", "GS"), ("_GSUP_raw", "GSUP")):
         if name not in features:
             continue

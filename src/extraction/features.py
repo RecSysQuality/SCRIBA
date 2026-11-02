@@ -1,20 +1,4 @@
-"""
-Enumerazione di biclique massimali in un grafo bipartito user-item.
 
-Una biclique (U, I) e' un gruppo di utenti U e item I tale che OGNI utente di U
-ha recensito OGNI item di I. Cerchiamo quelle con |U| >= min_users e
-|I| >= min_items, e solo quelle MASSIMALI (non estendibili ne' in utenti ne'
-in item): altrimenti da un gruppo di 4 utenti usciresti anche tutti i suoi
-sottogruppi, un'esplosione combinatoria inutile.
-
-Algoritmo: LCM / prefix-preserving closure extension (enumerazione dei closed
-itemset). Ogni biclique massimale viene emessa esattamente una volta, senza
-deduplica e senza tenere i risultati in memoria.
-
-Uso:
-    python maximal_bicliques.py edges.tsv --min-users 3 --min-items 2
-dove edges.tsv ha una riga per arco: user_id<TAB>item_id
-"""
 
 from collections import defaultdict, Counter
 import argparse
@@ -24,7 +8,6 @@ import sys
 # ---------------------------------------------------------------- caricamento
 
 def load_edges(path, sep="\t"):
-    """Legge il file archi e restituisce user2items, item2users (dict di set)."""
     user2items = defaultdict(set)
     item2users = defaultdict(set)
     with open(path) as f:
@@ -39,7 +22,6 @@ def load_edges(path, sep="\t"):
 
 
 def build_from_dict(user_dict):
-    """Costruisce le due mappe da un dict {user: iterable_di_item}."""
     user2items = {u: set(items) for u, items in user_dict.items()}
     item2users = defaultdict(set)
     for u, items in user2items.items():
@@ -51,12 +33,7 @@ def build_from_dict(user_dict):
 # ------------------------------------------------------------ pre-filtraggio
 
 def prune(user2items, item2users, min_users, min_items, verbose=True):
-    """
-    Riduzione iterativa (tipo k-core bipartito): butta via item con meno di
-    min_users recensori e utenti con meno di min_items item, fino a punto fisso.
-    Su dati reali questo passaggio toglie spesso l'80-95% degli archi ed e' la
-    ragione principale per cui l'enumerazione poi regge.
-    """
+
     changed = True
     while changed:
         changed = False
@@ -80,17 +57,10 @@ def prune(user2items, item2users, min_users, min_items, verbose=True):
     return user2items, item2users
 
 
-# ------------------------------------------------------------- enumerazione
 
 def maximal_bicliques(user2items, item2users, min_users=3, min_items=2):
-    """
-    Generatore di (frozenset_utenti, frozenset_item), biclique massimali con
-    |U| >= min_users e |I| >= min_items.
 
-    L'ordine totale sugli item serve solo a garantire l'unicita': uso un
-    ranking interno (item piu' frequenti = rank piu' basso), che di solito
-    pota prima e meglio.
-    """
+
     rank = {i: r for r, i in enumerate(
         sorted(item2users, key=lambda x: (-len(item2users[x]), str(x))))}
 
@@ -102,11 +72,7 @@ def maximal_bicliques(user2items, item2users, min_users=3, min_items=2):
         return c
 
     def rec(prefix, tid, tail):
-        """
-        prefix: closed itemset corrente (set di item)
-        tid:    insieme di utenti che li hanno TUTTI recensiti
-        tail:   rank dell'ultimo item aggiunto (solo estensioni con rank >)
-        """
+
         counts = item_counts(tid)
         # candidati: item non gia' nel prefix, con rank > tail, ancora frequenti
         cands = sorted((rank[i] for i, c in counts.items()
@@ -149,7 +115,6 @@ def maximal_bicliques(user2items, item2users, min_users=3, min_items=2):
     yield from rec(root, all_users, -1)
 
 
-# --------------------------------------------------------------------- main
 
 def main():
     ap = argparse.ArgumentParser()
