@@ -1,42 +1,52 @@
 # SCRIBA
 
-This repository contains the code for **SCRIBA: A Budget-Aware Active Learning Framework for Defect Removal in Recommender Systems**, presented as a full paper at the 2027 ACM WWW conference.
+This repository contains the code for **SCRIBA: A Budget-Aware Active Learning Framework for Defect Removal in Recommender Systems**, presented as a full paper at the 2027 ACM The Web Conference.
 
 ## How SCRIBA works
-![Screenshot](./pipeline1.png)
 
-The pipeline comprises two main phases: *passive learning* and *active learning* phases.
+![Pipeline overview](./pipeline1.png)
+
+Recommender systems learn from user interactions, which makes them exposed to noise and manipulation (e.g., fake reviews). Anomaly detectors flag groups of suspicious interactions, called **defects**, but they produce false positives and platforms can only afford to verify a limited number of them. SCRIBA answers the question: *which detector-flagged defects should be removed first to minimise users' exposure to corrupted items under a limited verification budget?*
+
+The pipeline can be paired with any anomaly detector and comprises two main phases: *passive learning* and *active learning*.
 
 ### Passive Learning
 
-**Defect injection and processing**
-The pipeline starts from a collection of user-item interaction graphs, into which synthetic defects are artificially injected — fake user profiles and fraudulent interactions — to simulate realistic attack scenarios. A GraphSAGE encoder is then trained on these corrupted graphs, learning to represent every node (user or item) in a shared latent space. Each defect is then represented as the average of the embeddings of its constituent nodes.
+Performed once, offline, on training graphs that are disjoint from the ones seen at deployment.
+
+**Defect detection and processing**
+Anomaly detectors are applied to each training graph to obtain candidate defects (user–item bicliques, item-centred stars, user-centred stars). A GraphSAGE encoder, trained once on all training graphs with a BPR loss, embeds users and items in a shared latent space. Each defect is represented by concatenating the mean-pooled embeddings of its users and of its items.
 
 **Impact attribution**
-To quantify how much each defect harms recommendation quality, a leave-one-out strategy is applied: one defect at a time is removed from the graph, the recommendation model (LightGCN) is lightly fine-tuned on the resulting graph, and the change in Shannon entropy of the recommendation lists for the affected users is measured. A positive shift means that removing that defect increases recommendation diversity.
+A LightGCN model is trained once per graph and its input embeddings are stored. The impact of a defect is computed with a leave-one-out (LOO) strategy, without retraining: the stored embeddings are re-propagated on the graph with and without the defect, and the label is the average reduction in the Target NDCG (T-NDCG) of the users affected by it, i.e. the exposure of those users to the defect's target items. Labels are rank-normalised within each graph.
 
 **Predictor training**
-The defect representations and their corresponding entropy variations are used to train a linear regressor, which learns to estimate the impact of a defect without actually removing it. This predictor can then be applied to previously unseen graphs.
+The defect representations and their normalised impact labels are used to train a linear regressor (MSE + L2 regularisation) that estimates the impact of a defect without computing the exact LOO. The predictor can then be applied to previously unseen graphs.
 
+### Active Learning
 
-## Active Learning
+Performed on a new, unseen graph, under a total edge-removal budget `B` and a per-round budget `b`. At each round:
+
 **Detection and representation**
-On a new deployment graph, an anomaly detection algorithm (FRAUDAR) identifies candidate defects. Each one is projected into the same latent space as the encoder trained in the passive phase, producing a compact and comparable representation.
+LightGCN is trained on the new graph and the detectors are applied to obtain the candidate set. At every round, candidates are re-encoded with the pretrained GraphSAGE encoder on the current (partially cleaned) graph.
 
-**Impact prediction and bandit-based selection**
-The predictor estimates the expected impact of each candidate defect. Those with a predicted impact below a threshold are discarded. Among the remaining ones, a LinUCB contextual bandit selects which defects to remove within the available budget, balancing exploitation — favouring defects with high estimated impact — and exploration — considering defects in under-observed regions of the latent space.
+**Impact prediction**
+The predictor estimates the impact of each candidate, and the top-ranked ones (up to `m · b` edges) form a pool.
+
+**Bandit-based selection**
+A LinUCB contextual bandit selects a batch of defects (up to `b` edges) from the pool, balancing exploitation (high predicted impact) and exploration (uncertain estimates). Selection stops early if no candidate has a positive UCB score.
 
 **Human validation and removal**
-The selected defects are submitted to human reviewers, who confirm which ones should actually be removed from the graph. After removal, the recommendation model is fine-tuned on the cleaned graph.
+The batch is submitted to human moderators, who confirm which defects are actually removed, filtering out false positives.
 
 **Online update**
-The feedback signals collected after each removal — the actual impact observed on the target user segment — are used to update both the predictor and the bandit, progressively improving the quality of future selections as the budget is consumed.
+The exact LOO impact is computed only for the validated defects and used as feedback to update both the bandit and the impact predictor (refitted with ridge regression) before the next round. When the budget is exhausted, LightGCN is retrained from scratch on the cleaned graph.
 
 ## Before Getting Started
 
-1. Clone the progject.
+1. Clone the project.
 
-2. Download the six datasets from the Amazon Reviews 2023 collection: [Amazon Reviews 2023 collection](https://amazon-reviews-2023.github.io/)
+2. Download the datasets: the Amazon Reviews 2023 subsets ([Amazon Reviews 2023 collection](https://amazon-reviews-2023.github.io/)) and the [Yelp Open Dataset](https://www.yelp.com/dataset).
 
 3. Extract the interaction `.jsonl` files into the following directory:
 
@@ -44,27 +54,22 @@ The feedback signals collected after each removal — the actual impact observed
 src/data/original/
 ```
 
-3. From the root directory of the project, run:
+4. From the root directory of the project, run:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Passive learning
-1. To run the passive learning phases of the pipeline, from preprocessing to training of impact predictor, run:
-   
-```bash
-python run src/passive_learning/main.py
-```
+## Extraction
 
-The method will first train LightGCN on all the datasets. It will take some time depending on the infrastructure on which you deploy SCRIBA, especially for the larger datasets such as Books, Pet Supplies and Beauty and Personal Care.
+## Training
 
-## Active learning 
+## Embeddings
 
-Make sure to have all the models saved from passive learning phase.
+## Impact attribution
 
-1. To run the active learning phases of the pipeline, run:
-   
-```bash
-python run src/active_learning/main.py
-```
+## Active learning
+
+## Final evaluation
+
+## Ablation study
