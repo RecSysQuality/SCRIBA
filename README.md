@@ -116,15 +116,13 @@ python3 src/mab/mab_tndcg.py \
     --targets all --policies mab --pools regressor --pool-mult 3 \
     --seeds 0 \
     --regressor src/impact_regressor/scriba_regressor_out/final_model_tndcg.pkl \
-    --regressor-active src/impact_regressor/scriba_regressor_out/final_model_active.pkl \
-    --regressor-lt src/impact_regressor/scriba_regressor_out/final_model_lt.pkl \
     --emb-dir src/node_embeddings/defects \
     --sage-encoder src/node_embeddings/weights/sage_shared_tndcg.pt \
     --yhat seg --reg-update ridge --reg-train-on chosen+probe \
     --warm-neff 200 --use-exposure --only-touching --hurdle \
     --max-defects 300000 --feature-cache src/mab/features \
     --budget-per-round 500 --max-per-round 50 --total-budget 10000 \
-    --probe 20 --holdout 20 --sage-every 5 --probe-update --no-online-scale \
+    --probe 20 --holdout 20 --probe-update --no-online-scale \
     --reward-transform slog --mab-stop --patience 11800000 --impact tndcg \
     --tag full
 ```
