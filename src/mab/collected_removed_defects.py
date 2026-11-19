@@ -1,17 +1,4 @@
-#!/usr/bin/env python3
-"""
-Copia i removed_defects.tsv dagli esperimenti MAB nella cartella di ablation di recbole_f.
 
-Struttura attesa:
-  <RESULTS_ROOT>/<DATASET>/<exp>_max300000_rt-slog_stop_pat1000000/<tipo>/removed_defects.tsv
-
-Scope:
-  ..._src-rev2_...  -> rev2   (idem group, gsdb, ...)
-  nessun "src-"     -> all
-
-Output:
-  <OUT_DIR>/<DATASET>/<DATASET>.removed_all__<tipo>__<scope>_50K_ablation.tsv
-"""
 import argparse
 import re
 import shutil
