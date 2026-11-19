@@ -1,46 +1,4 @@
-#!/usr/bin/env python3
-"""
-run_cf.py
-=========
-Allena LightGCN, NGCF e GCMC su tutte le varianti di rumore.
 
-DIFFERENZE RISPETTO A run_experiments.py (modelli sequenziali)
---------------------------------------------------------------
-1. SPLIT STRATEGY — RS invece di LOO
-   LightGCN, NGCF e GCMC sono modelli CF non sequenziali. Non usano
-   l'ordinamento temporale per fare predizioni. Lo split è
-   quindi Random Split (80/10/10) invece di Leave-One-Out.
-   Il file .inter contiene TUTTI i dati; RecBole fa RS automaticamente.
-
-2. LOSS / NEG SAMPLING — BPR (LightGCN/NGCF) o niente (GCMC)
-   LightGCN e NGCF usano BPR con neg sampling esplicito.
-   GCMC è rating prediction (regressione): niente neg sampling,
-   niente full_sort_predict. La funzione is_rating_model() isola
-   questa logica così run_single rimane un unico entry point.
-
-3. FULL_SORT_PREDICT vs PREDICT
-   LightGCN/NGCF: full_sort_predict (score su tutti gli item).
-   GCMC: predict() su coppie (u, i) osservate → RMSE/MAE.
-   Le beyond-accuracy e le metriche active/lt sono skippate per
-   GCMC (non ha senso calcolare coverage/novelty su rating pred).
-
-4. ITEM EMBEDDING
-   LightGCN: model.item_embedding (nn.Embedding).
-   NGCF:     model.embedding_dict['item_id'] (ParameterDict).
-   GCMC:     model.encoder.W (matrice peso encoder) — non usato
-             per diversity perché il task è diverso.
-   La funzione get_item_emb() gestisce tutti i casi.
-
-5. STAGING — rating incluso per GCMC
-   Lo staging per GCMC emette anche la colonna rating:float.
-   Lo staging per LightGCN/NGCF rimane invariato (solo u/i/ts).
-   La funzione stage_dataset() accetta il flag include_rating.
-
-6. AUC — calcolato in post-processing per GCMC
-   RecBole non calcola AUC nativamente per regression task.
-   Viene calcolato binarizzando i rating: ≥4 = positivo (1-5 stelle).
-   sklearn.metrics.roc_auc_score viene usato su predicted vs true.
-"""
 
 import argparse
 import json
