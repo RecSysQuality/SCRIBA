@@ -1,19 +1,3 @@
-# ============================================================
-# GraphSAGE induttivo per SCRIBA + defect embedding [utenti ; item]
-# ============================================================
-# - UN solo encoder condiviso, addestrato su piu' grafi (corrotti) del
-#   passive phase e applicato in inferenza a grafi mai visti.
-# - Feature di input solo strutturali e comparabili tra grafi diversi
-#   (niente normalizzazioni per il massimo del singolo grafo).
-# - Training BPR su triplette (u, i+, i-) con negativi campionati SOLO
-#   tra gli item.
-# - Inferenza full-neighborhood esatta e deterministica: lo stesso nodo
-#   ha sempre lo stesso embedding (importante per LinUCB).
-# - Defect embedding: concat(media z_u su U_k, media z_i su I_k)
-#   -> dimensione 2 * out_dim  (es. out_dim=16 -> 32).
-#
-# Richiede torch_geometric con pyg-lib o torch-sparse (LinkNeighborLoader).
-# ============================================================
 
 import os
 import random
