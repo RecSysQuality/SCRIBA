@@ -1,22 +1,4 @@
-#!/usr/bin/env python3
-"""
-Riprende il training di un modello "dopo la rimozione" dal suo checkpoint e lo porta avanti
-fino al numero di epoche / early stopping della configurazione completa.
 
-Uso (da src/recbole_f, su un nodo con GPU):
-    python3 resume_train.py --dataset Books \
-        --removed src/recbole_f/removed_defects_new_version_tndcg/<file removed_*.tsv> \
-        [--epochs 300] [--stopping-step 10] [--rre-module run_removed_eval_1]
-
-Cosa fa:
-  1. ricostruisce il dataset ripulito ESATTAMENTE come il dump (staging dal file di rimozione attuale);
-  2. carica il checkpoint esistente con trainer.resume_checkpoint (pesi, ottimizzatore, epoca,
-     contatore dell'early stopping, best valid score);
-  3. continua trainer.fit fino a --epochs (default: quelle della config) con lo stesso early stopping;
-  4. se il training trova un modello migliore, il vecchio checkpoint viene rinominato in .pth.short,
-     cosi' nella cartella resta un solo .pth (quello che il dump usera').
-Il checkpoint di RecBole e' quello dell'epoca migliore in validazione: si riparte da li'.
-"""
 import argparse
 import importlib
 import re
