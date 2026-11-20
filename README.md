@@ -157,7 +157,7 @@ Get the performances in latex tables and plots. It is done in two steps, both ru
 **1. Dump.** Collects the retrained results and the candidate defects of each detector into `--out`. `candidates.npz` is rebuilt only if it does not exist: to rebuild it (e.g. after changing the sources), move or delete `<out>/<dataset>/lists/candidates.npz` before running.
 
 ```bash
-python3 src/recbole_f/dump_for_analysis.py dump --datasets Books --no-train \
+python3 src/recbole_f/eval/dump_for_analysis.py dump --datasets Books --no-train \
         --removed-dir src/recbole_f/removed_defects \
         --rre-module run_removed_eval_1 --out src/recbole_f/results/targeting_final \
         --curves 10 --curve-k 10 20 50 \
@@ -171,7 +171,7 @@ python3 src/recbole_f/dump_for_analysis.py dump --datasets Books --no-train \
 **2. Tables and plots.** `--out` must be the same folder used in the dump (it has to contain `<dataset>/lists/`).
 
 ```bash
-python3 src/recbole_f/final_analysis_4_all.py \
+python3 src/recbole_f/eval/eval.py \
         --datasets Books \
         --out src/recbole_f/results/targeting_final \
         --methods heuristic mab_all \
